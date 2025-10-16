@@ -5,21 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YSM - YouTube Subs Monetization</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
     
     <style>
         :root {
-            --primary-red: #e53935;
-            --dark-red: #c62828;
-            --black: #121212;
-            --dark-gray: #1e1e1e;
-            --medium-gray: #2d2d2d;
-            --light-gray: #424242;
+            --primary-red: #E50914;
+            --dark-red: #b80710;
+            --black: #000000;
+            --dark-gray: #0a0a0a;
+            --medium-gray: #1a1a1a;
+            --light-gray: #333333;
             --white: #ffffff;
-            --success: #4caf50;
-            --warning: #ff9800;
+            --success: #00ff00;
+            --warning: #ffa500;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
         }
 
         * {
@@ -42,13 +46,37 @@
             padding: 0 20px;
         }
 
+        /* Glassmorphism Effect */
+        .glassmorphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+        }
+
+        .smooth-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .btn-3d {
+            transform: translateZ(20px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-3d:hover {
+            transform: translateZ(30px) translateY(-5px);
+            box-shadow: 0 15px 30px rgba(229, 9, 20, 0.4);
+        }
+
         header {
-            background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%);
+            background: var(--black);
             padding: 15px 0;
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .header-content {
@@ -87,7 +115,7 @@
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(229, 57, 53, 0.4);
+            box-shadow: 0 5px 15px rgba(229, 9, 20, 0.4);
         }
 
         .btn-outline {
@@ -96,8 +124,8 @@
             border: 2px solid var(--white);
         }
 
-        .btn-success { background-color: var(--success); color: var(--white); }
-        .btn-warning { background-color: var(--warning); color: var(--white); }
+        .btn-success { background-color: var(--success); color: var(--black); }
+        .btn-warning { background-color: var(--warning); color: var(--black); }
         .btn-danger { background-color: var(--primary-red); color: var(--white); }
 
         .badge {
@@ -108,7 +136,7 @@
         }
 
         .badge-pending { background: var(--warning); color: var(--black); }
-        .badge-approved { background: var(--success); color: var(--white); }
+        .badge-approved { background: var(--success); color: var(--black); }
         .badge-rejected { background: var(--primary-red); color: var(--white); }
 
         .loading {
@@ -136,10 +164,12 @@
             max-width: 500px;
             margin: 100px auto;
             padding: 40px;
-            background: linear-gradient(135deg, var(--medium-gray) 0%, var(--dark-gray) 100%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
             border-radius: 15px;
             display: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
         }
 
         .form-title {
@@ -182,20 +212,23 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%);
+            background: var(--black);
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .wallet-card {
-            background: linear-gradient(135deg, var(--medium-gray) 0%, var(--dark-gray) 100%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
             padding: 25px;
             border-radius: 15px;
             margin: 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
         }
 
         .wallet-balance {
@@ -214,6 +247,7 @@
             right: 0;
             background: var(--dark-gray);
             padding: 12px 0;
+            border-top: 1px solid var(--glass-border);
         }
 
         .nav-item {
@@ -275,9 +309,11 @@
         }
 
         .admin-card {
-            background: var(--medium-gray);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
         }
 
         .user-list {
@@ -327,6 +363,125 @@
             color: var(--light-gray);
             margin-top: 10px;
         }
+
+        /* Task Video Styles */
+        .task-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .task-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .subscribe-btn:disabled {
+            background: var(--light-gray);
+            cursor: not-allowed;
+        }
+
+        .subscribe-btn:not(:disabled):hover {
+            background: var(--dark-red);
+            transform: translateY(-2px);
+        }
+
+        /* Tier Table Styles */
+        .tier-table {
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tier-table th {
+            background: var(--primary-red);
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tier-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .tier-table tr:hover {
+            background: var(--glass-bg);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: var(--light-gray);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary-red), var(--success));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .wallet-card {
+                margin: 10px;
+            }
+            
+            .tier-table {
+                font-size: 0.8rem;
+            }
+            
+            .video-container {
+                height: 200px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -355,17 +510,99 @@
             </div>
         </header>
 
-        <section style="background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%); padding: 180px 0 100px; text-align: center;">
+        <!-- Hero Section -->
+        <section style="background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%); padding: 180px 0 100px; text-align: center;">
             <div class="container">
-                <h1 style="font-size: 3.5rem; margin-bottom: 25px;">YouTube Subs Monetization</h1>
+                <h1 style="font-size: 3.5rem; margin-bottom: 25px;">🌍 Welcome to YSM — Where Attention Becomes Wealth</h1>
                 <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 30px;">
-                    Earn money by subscribing to YouTube channels
+                    Get paid for watching YouTube videos. Simple, secure, and profitable.
                 </p>
-                <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('register-page')">
-                    Start Earning Now
-                </button>
+                <div class="auth-buttons">
+                    <button class="btn btn-primary btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('register-page')">
+                        Join YSM Now
+                    </button>
+                    <button class="btn btn-outline btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('login-page')">
+                        Log In to Start Earning
+                    </button>
+                </div>
             </div>
         </section>
+
+        <!-- How It Works -->
+        <section style="padding: 80px 0; background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">How It Works</h2>
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 30px;">
+                    <div class="glassmorphism smooth-3d" style="padding: 30px; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">📝</div>
+                        <h3 style="margin-bottom: 15px;">Register</h3>
+                        <p>Create your account and complete verification</p>
+                    </div>
+                    <div class="glassmorphism smooth-3d" style="padding: 30px; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">🔒</div>
+                        <h3 style="margin-bottom: 15px;">KYC Verification</h3>
+                        <p>Complete identity verification for security</p>
+                    </div>
+                    <div class="glassmorphism smooth-3d" style="padding: 30px; text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 20px;">💰</div>
+                        <h3 style="margin-bottom: 15px;">Watch & Earn</h3>
+                        <p>Get paid for watching sponsored videos</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tier Table -->
+        <section style="padding: 80px 0; background: var(--black);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">Investment Tiers</h2>
+                <div class="tier-table-container" style="overflow-x: auto;">
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Ads/Day</th>
+                                <th>Pay/Ad</th>
+                                <th>Daily</th>
+                                <th>Monthly</th>
+                                <th>6-Month</th>
+                                <th>1-Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>$115.38</td><td>8</td><td>$0.48</td><td>$3.85</td><td>$115.38</td><td>$692.31</td><td>$1,384.62</td></tr>
+                            <tr><td>$192.31</td><td>10</td><td>$0.64</td><td>$6.41</td><td>$192.31</td><td>$1,153.85</td><td>$2,307.69</td></tr>
+                            <tr><td>$269.23</td><td>12</td><td>$0.75</td><td>$8.97</td><td>$269.23</td><td>$1,615.38</td><td>$3,230.77</td></tr>
+                            <tr><td>$307.69</td><td>13</td><td>$0.79</td><td>$10.26</td><td>$307.69</td><td>$1,846.15</td><td>$3,692.31</td></tr>
+                            <tr><td>$461.54</td><td>15</td><td>$1.03</td><td>$15.38</td><td>$461.54</td><td>$2,769.23</td><td>$5,538.46</td></tr>
+                            <tr><td>$615.38</td><td>17</td><td>$1.21</td><td>$20.51</td><td>$615.38</td><td>$3,692.31</td><td>$7,384.62</td></tr>
+                            <tr><td>$769.23</td><td>18</td><td>$1.43</td><td>$25.64</td><td>$769.23</td><td>$4,615.38</td><td>$9,230.77</td></tr>
+                            <tr><td>$923.08</td><td>20</td><td>$1.54</td><td>$30.77</td><td>$923.08</td><td>$5,538.46</td><td>$11,076.92</td></tr>
+                            <tr><td>$1,692.31</td><td>25</td><td>$2.26</td><td>$56.41</td><td>$1,692.31</td><td>$10,153.85</td><td>$20,307.69</td></tr>
+                            <tr><td>$2,461.54</td><td>30</td><td>$2.74</td><td>$82.05</td><td>$2,461.54</td><td>$14,769.23</td><td>$29,538.46</td></tr>
+                            <tr><td>$3,230.77</td><td>35</td><td>$3.08</td><td>$107.69</td><td>$3,230.77</td><td>$19,384.62</td><td>$38,769.23</td></tr>
+                            <tr><td>$4,000.00</td><td>40</td><td>$3.33</td><td>$133.33</td><td>$4,000.00</td><td>$24,000.00</td><td>$48,000.00</td></tr>
+                            <tr><td>$4,615.38</td><td>45</td><td>$3.42</td><td>$153.85</td><td>$4,615.38</td><td>$27,692.31</td><td>$55,384.62</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="background: var(--dark-gray); padding: 40px 0; border-top: 1px solid var(--glass-border);">
+            <div class="container">
+                <div style="text-align: center;">
+                    <p>&copy; 2024 YSM - YouTube Subs Monetization. All rights reserved.</p>
+                    <div style="margin-top: 20px;">
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Terms</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Privacy</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Contact</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Support</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <!-- Registration Page -->
@@ -378,9 +615,21 @@
             <input type="email" class="form-control" id="reg-email" placeholder="Email Address" required>
         </div>
         <div class="form-group">
+            <input type="tel" class="form-control" id="reg-phone" placeholder="Phone Number" required>
+        </div>
+        <div class="form-group">
+            <select class="form-control" id="reg-country" required>
+                <option value="">Select Country</option>
+                <option value="us">United States</option>
+                <option value="uk">United Kingdom</option>
+                <option value="ke">Kenya</option>
+                <option value="ng">Nigeria</option>
+            </select>
+        </div>
+        <div class="form-group">
             <input type="password" class="form-control" id="reg-password" placeholder="Create Password" required>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="registerUser()">Create Account</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="registerUser()">Create Account</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
         </p>
@@ -395,13 +644,13 @@
         <div class="form-group">
             <input type="password" class="form-control" id="login-password" placeholder="Password" required>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">Login</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="loginUser()">Login</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
         </p>
     </div>
 
-    <!-- KYC Page - COMPLETE WITH FILE UPLOAD -->
+    <!-- KYC Page -->
     <div id="kyc-page" class="page form-container">
         <h2 class="form-title">KYC Verification - REQUIRED</h2>
         <p style="text-align: center; margin-bottom: 25px; color: var(--warning);">
@@ -425,7 +674,7 @@
             <input type="text" class="form-control" id="kyc-id-number" placeholder="ID Number" required>
         </div>
 
-        <!-- ID Front Image - REQUIRED -->
+        <!-- File Uploads -->
         <div class="form-group">
             <label>ID Front Image *</label>
             <div class="file-upload" onclick="document.getElementById('kyc-front').click()">
@@ -436,7 +685,6 @@
             </div>
         </div>
 
-        <!-- ID Back Image - REQUIRED -->
         <div class="form-group">
             <label>ID Back Image *</label>
             <div class="file-upload" onclick="document.getElementById('kyc-back').click()">
@@ -447,7 +695,6 @@
             </div>
         </div>
 
-        <!-- Selfie with ID - REQUIRED -->
         <div class="form-group">
             <label>Selfie with ID *</label>
             <div class="file-upload" onclick="document.getElementById('kyc-selfie').click()">
@@ -458,13 +705,13 @@
             </div>
         </div>
 
-        <button class="btn btn-primary" style="width: 100%;" onclick="submitKYC()">Submit KYC Verification</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="submitKYC()">Submit KYC Verification</button>
     </div>
 
     <!-- KYC Pending Page -->
     <div id="kyc-pending-page" class="page form-container">
         <div style="text-align: center; padding: 40px;">
-            <div style="background: var(--warning); color: black; padding: 30px; border-radius: 15px; margin: 20px 0;">
+            <div class="glassmorphism" style="padding: 30px; border-radius: 15px; margin: 20px 0;">
                 <h2>🕒 KYC Verification Pending</h2>
                 <p>Your documents are under review by our admin team.</p>
                 <div class="badge badge-pending" style="margin-top: 15px;">Under Review</div>
@@ -477,10 +724,10 @@
     </div>
 
     <!-- User Dashboard -->
-    <div id="user-dashboard" class="page dashboard" style="display: none;">
+    <div id="user-dashboard" class="page dashboard">
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <div id="user-avatar" style="width: 45px; height: 45px; border-radius: 50%; background: var(--primary-red); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">U</div>
+                <div id="user-avatar" class="glassmorphism" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">U</div>
                 <div>
                     <div id="user-display-name" style="font-weight: bold;">User</div>
                     <div style="font-size: 0.8rem; color: var(--light-gray);">
@@ -493,43 +740,84 @@
         </div>
 
         <div class="dashboard-content">
+            <!-- Wallet Summary -->
             <div class="wallet-card">
                 <h3>💰 Your YSM Wallet</h3>
                 <div class="wallet-balance" id="user-balance">$0.00</div>
-                <p>Available for withdrawal • Minimum: $5</p>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 20px; padding: 15px;" onclick="showWithdrawModal()">
+                <div style="display: flex; justify-content: space-between; margin: 15px 0;">
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--light-gray);">Pending</div>
+                        <div style="font-weight: bold;" id="user-pending">$0.00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--light-gray);">Referral Earnings</div>
+                        <div style="font-weight: bold;" id="user-referral">$0.00</div>
+                    </div>
+                </div>
+                
+                <!-- Daily Progress -->
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Daily Progress</span>
+                        <span id="daily-progress-text">0/0</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="daily-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-3d" style="width: 100%; margin-top: 20px; padding: 15px;" onclick="showWithdrawModal()">
                     Request Withdrawal
                 </button>
             </div>
 
-            <div style="padding: 20px;">
-                <h3 style="margin-bottom: 20px;">🎬 Available Subscriptions</h3>
-                <div style="background: linear-gradient(135deg, var(--medium-gray) 0%, var(--dark-gray) 100%); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-weight: bold; font-size: 1.1rem;">Tech Review Channel</div>
-                            <div style="color: var(--light-gray); font-size: 0.9rem;">Earn $2.56 per subscription</div>
-                        </div>
-                        <button class="btn btn-primary" onclick="completeSubscription()">
-                            Subscribe & Earn
-                        </button>
+            <!-- Referral Panel -->
+            <div class="wallet-card">
+                <h3>👥 Referral Program</h3>
+                <div class="form-group">
+                    <label>Your Referral Link</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control" id="referral-link" readonly>
+                        <button class="btn btn-primary" onclick="copyReferralLink()">Copy</button>
                     </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="glassmorphism" style="padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="referral-count">0</div>
+                        <div style="font-size: 0.9rem;">Total Referrals</div>
+                    </div>
+                    <div class="glassmorphism" style="padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="referral-earnings">$0</div>
+                        <div style="font-size: 0.9rem;">Total Earnings</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div style="padding: 20px;">
+                <h3 style="margin-bottom: 20px;">🎬 Available Tasks</h3>
+                <div id="tasks-container">
+                    <!-- Tasks will be loaded here -->
                 </div>
             </div>
         </div>
 
         <div class="bottom-nav">
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item active" onclick="showDashboardSection('home')">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" onclick="showDashboardSection('tasks')">
                 <i class="fas fa-tasks"></i>
                 <span>Tasks</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" onclick="showDashboardSection('wallet')">
                 <i class="fas fa-wallet"></i>
                 <span>Wallet</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showDashboardSection('profile')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
             </a>
         </div>
     </div>
@@ -543,20 +831,17 @@
         <div class="form-group">
             <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" value="admin123" required>
         </div>
-        <div class="form-group">
-            <input type="text" class="form-control" id="admin-2fa" placeholder="Security Code" value="123456" required>
-        </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="loginAdmin()">Access Admin Panel</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="loginAdmin()">Access Admin Panel</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
         </p>
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="admin-dashboard" class="page dashboard" style="display: none;">
+    <div id="admin-dashboard" class="page dashboard">
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <div style="width: 45px; height: 45px; border-radius: 50%; background: var(--warning); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">A</div>
+                <div class="glassmorphism" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">A</div>
                 <div>
                     <div style="font-weight: bold;">YSM Admin Panel</div>
                     <div style="font-size: 0.8rem; color: var(--light-gray);">Full System Access</div>
@@ -585,7 +870,10 @@
                     <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="loadUserManagement()">
                         User Management
                     </button>
-                    <button class="btn btn-warning" style="width: 100%;" onclick="loadWithdrawalManagement()">
+                    <button class="btn btn-warning" style="width: 100%; margin-bottom: 10px;" onclick="loadAdsManagement()">
+                        Ads Management
+                    </button>
+                    <button class="btn btn-danger" style="width: 100%;" onclick="loadWithdrawalManagement()">
                         Withdrawal Management
                     </button>
                 </div>
@@ -610,6 +898,18 @@
                         <div class="spinner"></div>
                         <p>Loading users...</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Ads Management -->
+            <div id="ads-management" class="admin-card" style="margin-top: 20px; display: none;">
+                <h3 style="color: var(--primary-red); margin-bottom: 20px;">📺 Ads Management</h3>
+                <div class="form-group">
+                    <textarea class="form-control" id="bulk-youtube-links" placeholder="Paste YouTube links (one per line)" rows="5"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="bulkAddVideos()">Add Videos as Tasks</button>
+                <div id="ads-list" style="margin-top: 20px;">
+                    <!-- Ads will be listed here -->
                 </div>
             </div>
 
@@ -644,15 +944,17 @@
             </select>
         </div>
         <div class="form-group">
-            <label>Enter Your 4-Digit PIN</label>
+            <label>Enter Your 6-Digit PIN</label>
             <div class="pin-container">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 1)">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 2)">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 3)">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 4)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 5)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 6)">
             </div>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="submitWithdrawal()">
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="submitWithdrawal()">
             Submit Withdrawal
         </button>
         <p style="text-align: center; margin-top: 20px;">
@@ -666,9 +968,9 @@
         // Firebase Config
         const firebaseConfig = {
             apiKey: "AIzaSyDOKJQayF5j5xCp6LVZEEFFJH0QiQtezgg",
-            authDomain: "sm-platform-6ef20.firebaseapp.com",
-            projectId: "sm-platform-6ef20", 
-            storageBucket: "sm-platform-6ef20.firebasestorage.app",
+            authDomain: "ysm-platform.firebaseapp.com",
+            projectId: "ysm-platform",
+            storageBucket: "ysm-platform.firebasestorage.app",
             messagingSenderId: "485407332553",
             appId: "1:485407332553:web:77bd1bf2b3146486e51518"
         };
@@ -677,9 +979,47 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        const storage = firebase.storage();
 
         let currentUser = null;
         let userId = null;
+        let videoPlayers = {};
+
+        // YouTube video links from your prompt
+        const youtubeLinks = [
+            "https://youtu.be/Il9lcAzynWw",
+            "https://youtu.be/bVqhNPYYUno",
+            "https://youtu.be/DWEkzYRE2nk",
+            "https://youtu.be/1kAI6TKpiqI",
+            "https://youtu.be/H2RhIdf0MXo",
+            "https://youtu.be/qe5dJCRWifo",
+            "https://youtu.be/MTtiyKc8f2g",
+            "https://youtu.be/l3RyWY_PXTw",
+            "https://youtu.be/kOcEK5TGXV8",
+            "https://youtu.be/zOqdQUOTjV0",
+            "https://youtu.be/ajsZ3rrLxjs",
+            "https://youtu.be/D3RO2xNKS6s",
+            "https://youtu.be/iLwsPnywFc0",
+            "https://youtu.be/eFJ4_QEfu64",
+            "https://youtu.be/MTtiyKc8f2g",
+            "https://youtu.be/ds9PWKjmUlE",
+            "https://youtu.be/Brrmj9z7QLw",
+            "https://youtu.be/Dz4yad8kz9g",
+            "https://youtu.be/BZi6G6oinlk",
+            "https://youtu.be/w2yFwbYITMg",
+            "https://youtu.be/rXuXyGHMAog",
+            "https://youtu.be/CDjOdTeyNPI",
+            "https://youtu.be/eOMhOjgNd7Q",
+            "https://youtu.be/UnEQvsOa-3g",
+            "https://youtu.be/0Ab-F7Y3IXc",
+            "https://youtu.be/2l8dNRfZit0",
+            "https://youtu.be/OeFxd7xKFXk",
+            "https://youtu.be/WRX8VGvllEY",
+            "https://youtu.be/xAuK1iDL44A",
+            "https://youtu.be/jSWGA1YITFA",
+            "https://youtu.be/CEL6Uldh4lc",
+            "https://youtu.be/4vLOvPBczwc"
+        ];
 
         // File upload handlers
         document.getElementById('kyc-front').addEventListener('change', function(e) {
@@ -708,6 +1048,10 @@
                 page.style.display = 'none';
             });
             document.getElementById(pageId).style.display = 'block';
+            
+            if (pageId === 'user-dashboard' && currentUser) {
+                loadUserDashboard();
+            }
         }
 
         function showError(message) {
@@ -722,9 +1066,11 @@
         async function registerUser() {
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
+            const country = document.getElementById('reg-country').value;
             const password = document.getElementById('reg-password').value;
 
-            if (!name || !email || !password) {
+            if (!name || !email || !phone || !country || !password) {
                 showError('Please fill all fields');
                 return;
             }
@@ -737,11 +1083,20 @@
                 await db.collection('users').doc(user.uid).set({
                     name: name,
                     email: email,
+                    phone: phone,
+                    country: country,
                     balance: 0,
+                    pendingBalance: 0,
+                    referralEarnings: 0,
                     tier: 'basic',
-                    kycStatus: 'pending',
+                    kycStatus: 'none',
                     withdrawalPin: generatePIN(),
+                    dailyWatchCount: 0,
+                    adsPerDay: 8,
+                    payPerAd: 0.48,
                     canEarn: false,
+                    referralCode: generateReferralCode(),
+                    totalReferrals: 0,
                     createdAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
@@ -794,7 +1149,7 @@
             showPage('landing-page');
         }
 
-        // KYC Functions - ALL FILES REQUIRED
+        // KYC Functions
         async function submitKYC() {
             const name = document.getElementById('kyc-name').value;
             const idType = document.getElementById('kyc-id-type').value;
@@ -810,12 +1165,13 @@
 
             showLoading();
             try {
-                // Store KYC data (in real app, you'd upload files to storage)
+                // In a real app, you'd upload files to Firebase Storage
+                // For now, we'll just mark that files were uploaded
                 await db.collection('kycSubmissions').doc(userId).set({
                     name: name,
                     idType: idType,
                     idNumber: idNumber,
-                    filesUploaded: true, // Mark that files were uploaded
+                    filesUploaded: true,
                     status: 'pending',
                     submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
                     userId: userId
@@ -836,16 +1192,14 @@
             hideLoading();
         }
 
-        // Admin Functions - FULLY WORKING
+        // Admin Functions
         async function loginAdmin() {
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
-            const twoFA = document.getElementById('admin-2fa').value;
 
-            if (username === 'admin' && password === 'admin123' && twoFA === '123456') {
+            if (username === 'admin' && password === 'admin123') {
                 showLoading();
                 try {
-                    // Load admin data
                     await loadAdminStats();
                     showPage('admin-dashboard');
                     showSuccess('Admin login successful!');
@@ -859,17 +1213,15 @@
         }
 
         async function loadAdminStats() {
-            // Get total users
             const usersSnapshot = await db.collection('users').get();
             document.getElementById('total-users').textContent = usersSnapshot.size;
 
-            // Get pending KYC
             const kycSnapshot = await db.collection('kycSubmissions').where('status', '==', 'pending').get();
             document.getElementById('pending-kyc').textContent = kycSnapshot.size;
         }
 
         async function loadKYCManagement() {
-            showSection('kyc-management');
+            showAdminSection('kyc-management');
             const kycList = document.getElementById('kyc-list');
             
             try {
@@ -909,7 +1261,7 @@
         }
 
         async function loadUserManagement() {
-            showSection('user-management');
+            showAdminSection('user-management');
             const userList = document.getElementById('user-list');
             
             try {
@@ -941,15 +1293,86 @@
             }
         }
 
-        async function loadWithdrawalManagement() {
-            showSection('withdrawal-management');
-            const withdrawalList = document.getElementById('withdrawal-list');
-            withdrawalList.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">Withdrawal management loaded</p>';
+        async function loadAdsManagement() {
+            showAdminSection('ads-management');
+            const adsList = document.getElementById('ads-list');
+            
+            try {
+                const snapshot = await db.collection('tasks').get();
+                let html = '<h4>Current Tasks</h4>';
+                
+                if (snapshot.empty) {
+                    html += '<p>No tasks available</p>';
+                } else {
+                    snapshot.forEach(doc => {
+                        const task = doc.data();
+                        html += `
+                            <div class="user-item">
+                                <div>
+                                    <div style="font-weight: bold;">${task.title || 'Untitled Task'}</div>
+                                    <div style="font-size: 0.9rem; color: var(--light-gray);">
+                                        ${task.youtubeUrl}
+                                    </div>
+                                </div>
+                                <div>
+                                    <button class="btn btn-danger" onclick="deleteTask('${doc.id}')">Delete</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+                
+                adsList.innerHTML = html;
+            } catch (error) {
+                adsList.innerHTML = `<p style="color: var(--primary-red); text-align: center;">Error loading ads: ${error.message}</p>`;
+            }
         }
 
-        function showSection(sectionId) {
+        async function bulkAddVideos() {
+            const linksText = document.getElementById('bulk-youtube-links').value;
+            const links = linksText.split('\n').filter(link => link.trim());
+            
+            if (links.length === 0) {
+                showError('Please enter at least one YouTube link');
+                return;
+            }
+
+            showLoading();
+            try {
+                for (const link of links) {
+                    const videoId = extractYouTubeId(link);
+                    if (videoId) {
+                        await db.collection('tasks').add({
+                            youtubeUrl: link,
+                            videoId: videoId,
+                            title: 'YouTube Task',
+                            payPerAd: 2.56, // Default earning
+                            assignedTiers: ['basic', 'premium', 'pro'],
+                            active: true,
+                            dailyLimit: 1000,
+                            maxPerUserPerDay: 1,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                }
+                showSuccess(`Added ${links.length} videos as tasks`);
+                loadAdsManagement();
+            } catch (error) {
+                showError('Error adding videos: ' + error.message);
+            }
+            hideLoading();
+        }
+
+        function extractYouTubeId(url) {
+            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
+            const match = url.match(regex);
+            return match ? match[1] : null;
+        }
+
+        function showAdminSection(sectionId) {
             document.getElementById('kyc-management').style.display = 'none';
             document.getElementById('user-management').style.display = 'none';
+            document.getElementById('ads-management').style.display = 'none';
             document.getElementById('withdrawal-management').style.display = 'none';
             document.getElementById(sectionId).style.display = 'block';
         }
@@ -1009,6 +1432,169 @@
                 showSuccess('Balance updated successfully!');
             } catch (error) {
                 showError('Error updating balance: ' + error.message);
+            }
+        }
+
+        // User Dashboard Functions
+        async function loadUserDashboard() {
+            if (!currentUser || currentUser.kycStatus !== 'approved') return;
+            
+            updateUserUI();
+            loadTasks();
+            updateDailyProgress();
+        }
+
+        async function loadTasks() {
+            const tasksContainer = document.getElementById('tasks-container');
+            
+            try {
+                const snapshot = await db.collection('tasks').where('active', '==', true).get();
+                
+                if (snapshot.empty) {
+                    // Add sample tasks if none exist
+                    for (const link of youtubeLinks.slice(0, 5)) {
+                        const videoId = extractYouTubeId(link);
+                        await db.collection('tasks').add({
+                            youtubeUrl: link,
+                            videoId: videoId,
+                            title: 'YouTube Subscription Task',
+                            payPerAd: 2.56,
+                            assignedTiers: ['basic', 'premium', 'pro'],
+                            active: true,
+                            dailyLimit: 1000,
+                            maxPerUserPerDay: 1,
+                            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                        });
+                    }
+                    loadTasks(); // Reload tasks
+                    return;
+                }
+
+                let html = '';
+                snapshot.forEach(doc => {
+                    const task = doc.data();
+                    html += `
+                        <div class="task-card">
+                            <div class="video-container">
+                                <div id="player-${doc.id}"></div>
+                                <div class="task-timer" id="timer-${doc.id}">10s</div>
+                            </div>
+                            <h4>${task.title}</h4>
+                            <p>Earn $${task.payPerAd} per subscription</p>
+                            <button class="subscribe-btn" id="btn-${doc.id}" onclick="startTask('${doc.id}')" disabled>
+                                Start Watching to Enable
+                            </button>
+                        </div>
+                    `;
+                });
+                
+                tasksContainer.innerHTML = html;
+                
+                // Initialize YouTube players
+                snapshot.forEach(doc => {
+                    const task = doc.data();
+                    initializeYouTubePlayer(doc.id, task.videoId);
+                });
+                
+            } catch (error) {
+                tasksContainer.innerHTML = `<p style="color: var(--primary-red); text-align: center;">Error loading tasks: ${error.message}</p>`;
+            }
+        }
+
+        function initializeYouTubePlayer(taskId, videoId) {
+            videoPlayers[taskId] = new YT.Player(`player-${taskId}`, {
+                height: '300',
+                width: '100%',
+                videoId: videoId,
+                playerVars: {
+                    'playsinline': 1,
+                    'controls': 1,
+                    'modestbranding': 1
+                },
+                events: {
+                    'onStateChange': (event) => onPlayerStateChange(event, taskId)
+                }
+            });
+        }
+
+        function onPlayerStateChange(event, taskId) {
+            const button = document.getElementById(`btn-${taskId}`);
+            const timer = document.getElementById(`timer-${taskId}`);
+            
+            if (event.data === YT.PlayerState.PLAYING) {
+                startTimer(taskId, timer, button);
+            } else if (event.data === YT.PlayerState.PAUSED || event.data === YT.PlayerState.ENDED) {
+                button.disabled = true;
+                button.textContent = 'Start Watching to Enable';
+            }
+        }
+
+        function startTimer(taskId, timerElement, button) {
+            let seconds = 10;
+            button.disabled = true;
+            button.textContent = 'Waiting...';
+            
+            const countdown = setInterval(() => {
+                seconds--;
+                timerElement.textContent = seconds + 's';
+                
+                if (seconds <= 0) {
+                    clearInterval(countdown);
+                    button.disabled = false;
+                    button.textContent = 'Subscribe & Earn $2.56';
+                    timerElement.textContent = 'Ready!';
+                }
+            }, 1000);
+        }
+
+        function startTask(taskId) {
+            if (currentUser.dailyWatchCount >= currentUser.adsPerDay) {
+                showError('Daily task limit reached! Come back tomorrow.');
+                return;
+            }
+
+            showLoading();
+            setTimeout(async () => {
+                try {
+                    const earnings = 2.56;
+                    const newBalance = currentUser.balance + earnings;
+                    const newWatchCount = currentUser.dailyWatchCount + 1;
+                    
+                    await db.collection('users').doc(userId).update({
+                        balance: newBalance,
+                        dailyWatchCount: newWatchCount
+                    });
+                    
+                    // Record task completion
+                    await db.collection('taskCompletions').add({
+                        userId: userId,
+                        taskId: taskId,
+                        earnings: earnings,
+                        completedAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                    
+                    currentUser.balance = newBalance;
+                    currentUser.dailyWatchCount = newWatchCount;
+                    updateUserUI();
+                    updateDailyProgress();
+                    
+                    showSuccess('Task completed! $' + earnings + ' added to your wallet.');
+                    
+                } catch (error) {
+                    showError(error.message);
+                }
+                hideLoading();
+            }, 1000);
+        }
+
+        function updateDailyProgress() {
+            const progressText = document.getElementById('daily-progress-text');
+            const progressBar = document.getElementById('daily-progress-bar');
+            
+            if (currentUser) {
+                const progress = (currentUser.dailyWatchCount / currentUser.adsPerDay) * 100;
+                progressText.textContent = `${currentUser.dailyWatchCount}/${currentUser.adsPerDay}`;
+                progressBar.style.width = `${progress}%`;
             }
         }
 
@@ -1083,36 +1669,21 @@
             hideLoading();
         }
 
-        // Subscription Function
-        async function completeSubscription() {
-            if (currentUser.kycStatus !== 'approved') {
-                showError('Please complete KYC verification first!');
-                return;
-            }
-            
-            showLoading();
-            try {
-                const earnings = 2.56;
-                const newBalance = currentUser.balance + earnings;
-                
-                await db.collection('users').doc(userId).update({
-                    balance: newBalance
-                });
-                
-                currentUser.balance = newBalance;
-                updateUserUI();
-                
-                showSuccess('Subscription completed! $' + earnings + ' added to your wallet.');
-                
-            } catch (error) {
-                showError(error.message);
-            }
-            hideLoading();
+        // Referral Functions
+        function copyReferralLink() {
+            const referralLink = document.getElementById('referral-link');
+            referralLink.select();
+            document.execCommand('copy');
+            showSuccess('Referral link copied to clipboard!');
         }
 
         // Utility Functions
         function generatePIN() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function generateReferralCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
         function updateUserUI() {
@@ -1120,12 +1691,30 @@
                 document.getElementById('user-display-name').textContent = currentUser.name;
                 document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
                 document.getElementById('user-balance').textContent = '$' + currentUser.balance.toFixed(2);
+                document.getElementById('user-pending').textContent = '$' + (currentUser.pendingBalance || 0).toFixed(2);
+                document.getElementById('user-referral').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
                 document.getElementById('user-tier-display').textContent = currentUser.tier.toUpperCase() + ' Tier';
+                
+                // Referral section
+                document.getElementById('referral-link').value = `${window.location.origin}?ref=${currentUser.referralCode}`;
+                document.getElementById('referral-count').textContent = currentUser.totalReferrals || 0;
+                document.getElementById('referral-earnings').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
                 
                 const kycBadge = document.getElementById('kyc-status');
                 kycBadge.textContent = currentUser.kycStatus;
                 kycBadge.className = 'badge badge-' + currentUser.kycStatus;
             }
+        }
+
+        function showDashboardSection(section) {
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            // Show corresponding section
+            // Implementation for different dashboard sections
         }
 
         // Auto-login
@@ -1149,7 +1738,36 @@
             }
         });
 
-        console.log('🚀 YSM Platform - Complete Version Loaded!');
+        // Initialize some sample data
+        async function initializeSampleData() {
+            const tasksSnapshot = await db.collection('tasks').get();
+            if (tasksSnapshot.empty) {
+                // Add a few sample tasks
+                const sampleLinks = youtubeLinks.slice(0, 3);
+                for (const link of sampleLinks) {
+                    const videoId = extractYouTubeId(link);
+                    await db.collection('tasks').add({
+                        youtubeUrl: link,
+                        videoId: videoId,
+                        title: 'YouTube Subscription Task',
+                        payPerAd: 2.56,
+                        assignedTiers: ['basic', 'premium', 'pro'],
+                        active: true,
+                        dailyLimit: 1000,
+                        maxPerUserPerDay: 1,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+            }
+        }
+
+        // Initialize on load
+        window.onload = function() {
+            initializeSampleData();
+            console.log('🚀 YSM Platform - Complete Version Loaded!');
+            console.log('📹 YouTube video system ready');
+            console.log('👑 Admin access: admin / admin123');
+        };
     </script>
 </body>
 </html>
