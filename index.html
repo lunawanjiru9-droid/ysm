@@ -823,6 +823,24 @@
         </p>
     </div>
 
+    <!-- OTP Verification Page -->
+    <div id="otp-verification-page" class="page form-container">
+        <h2 class="form-title">Verify Your Account</h2>
+        <p style="text-align: center; margin-bottom: 25px;">
+            We've sent a verification code to your email and phone
+        </p>
+        <div class="form-group">
+            <input type="text" class="form-control" id="email-otp" placeholder="Email OTP Code" required>
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" id="sms-otp" placeholder="SMS OTP Code" required>
+        </div>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="verifyOTP()">Verify & Continue</button>
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="#" style="color: var(--primary-red);" onclick="resendOTP()">Resend Codes</a>
+        </p>
+    </div>
+
     <!-- Login Page -->
     <div id="login-page" class="page form-container">
         <h2 class="form-title">User Login</h2>
@@ -1138,10 +1156,10 @@
     <div id="admin-login-page" class="page form-container">
         <h2 class="form-title">Admin Login</h2>
         <div class="form-group">
-            <input type="text" class="form-control" id="admin-username" placeholder="Admin Username" required>
+            <input type="text" class="form-control" id="admin-username" placeholder="Admin Username" value="admin" required>
         </div>
         <div class="form-group">
-            <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" required>
+            <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" value="admin123" required>
         </div>
         <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="loginAdmin()">Access Admin Panel</button>
         <p style="text-align: center; margin-top: 20px;">
@@ -1374,6 +1392,7 @@
 
     <script>
         // ==================== FIREBASE CONFIGURATION ====================
+        // Replace these with your actual Firebase config from Firebase Console
         const firebaseConfig = {
             apiKey: "AIzaSyDOKJQayF5j5xCp6LVZEEFFJH0QiQtezgg",
             authDomain: "ysm-platform-6ef20.firebaseapp.com",
@@ -1390,10 +1409,14 @@
         const storage = firebase.storage();
 
         // ==================== APPLICATION STATE ====================
-        const ADMIN_UID = "OK1OugEkINVckgUbsz4I8SPBGrz2";
         let currentUser = null;
         let userId = null;
-        let isAdmin = false;
+        let userData = {
+            users: [],
+            kycSubmissions: [],
+            tasks: [],
+            withdrawals: []
+        };
 
         // Tier system configuration
         const tierSystem = {
@@ -1431,29 +1454,20 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 userId = user.uid;
-                isAdmin = (userId === ADMIN_UID);
-                
                 try {
-                    if (isAdmin) {
-                        // Admin user - show admin dashboard directly
-                        showPage('admin-dashboard');
-                        loadAdminStats();
-                    } else {
-                        // Regular user - load user data
-                        const userDoc = await db.collection('users').doc(userId).get();
-                        if (userDoc.exists) {
-                            currentUser = userDoc.data();
-                            currentUser.id = userId;
-                            updateUserUI();
-                            
-                            if (currentUser.kycStatus === 'approved') {
-                                showPage('user-dashboard');
-                            } else if (currentUser.kycStatus === 'pending') {
-                                showPage('kyc-pending-page');
-                            } else {
-                                showPage('kyc-page');
-                                document.getElementById('kyc-name').value = currentUser.name || '';
-                            }
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    if (userDoc.exists) {
+                        currentUser = userDoc.data();
+                        currentUser.id = userId;
+                        updateUserUI();
+                        
+                        if (currentUser.kycStatus === 'approved') {
+                            showPage('user-dashboard');
+                        } else if (currentUser.kycStatus === 'pending') {
+                            showPage('kyc-pending-page');
+                        } else {
+                            showPage('kyc-page');
+                            document.getElementById('kyc-name').value = currentUser.name;
                         }
                     }
                 } catch (error) {
@@ -1463,7 +1477,6 @@
             } else {
                 currentUser = null;
                 userId = null;
-                isAdmin = false;
                 showPage('landing-page');
             }
         });
@@ -1537,9 +1550,8 @@
                     paymentMethods: {}
                 });
 
-                showSuccess('Registration successful! Please complete KYC verification.');
-                showPage('kyc-page');
-                document.getElementById('kyc-name').value = name;
+                showSuccess('Registration successful! Please verify your account.');
+                showPage('otp-verification-page');
             } catch (error) {
                 showError(error.message);
             }
@@ -1555,26 +1567,7 @@
                 await auth.signInWithEmailAndPassword(email, password);
                 // Auth state listener will handle the rest
             } catch (error) {
-                showError('Error: ' + error.message);
-            }
-            hideLoading();
-        }
-
-        async function loginAdmin() {
-            const username = document.getElementById('admin-username').value;
-            const password = document.getElementById('admin-password').value;
-
-            showLoading();
-            try {
-                // For admin, we sign in with the admin UID
-                if (username === 'admin' && password === 'admin123') {
-                    // Sign in with admin credentials (you need to set this up in Firebase Auth)
-                    await auth.signInWithEmailAndPassword('admin@ysm.com', 'admin123');
-                } else {
-                    showError('Invalid admin credentials');
-                }
-            } catch (error) {
-                showError('Admin login failed: ' + error.message);
+                showError(error.message);
             }
             hideLoading();
         }
@@ -1584,7 +1577,6 @@
                 await auth.signOut();
                 currentUser = null;
                 userId = null;
-                isAdmin = false;
                 showPage('landing-page');
             } catch (error) {
                 console.error('Error signing out:', error);
@@ -1650,6 +1642,25 @@
         }
 
         // ==================== ADMIN FUNCTIONS ====================
+        function loginAdmin() {
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            if (username === 'admin' && password === 'admin123') {
+                // For admin, we'll use a special admin user in Firebase
+                auth.signInWithEmailAndPassword('admin@ysm.com', 'admin123')
+                    .then(() => {
+                        showPage('admin-dashboard');
+                        showSuccess('Admin login successful!');
+                    })
+                    .catch(() => {
+                        showError('Admin authentication failed');
+                    });
+            } else {
+                showError('Invalid admin credentials');
+            }
+        }
+
         async function loadAdminStats() {
             showAdminSection('admin-stats');
             
@@ -1868,12 +1879,11 @@
         }
 
         // Initialize the application
-        document.addEventListener('DOMContentLoaded', function() {
-            console.log('🚀 YSM Platform - Proper Admin UID Integration Loaded!');
-            console.log('📹 YouTube video system ready');
-            console.log('👑 Admin UID: ' + ADMIN_UID);
-            console.log('🔐 Regular users can register/login normally');
-        });
+        console.log('🚀 YSM Platform - Firebase Version Loaded!');
+        console.log('📹 YouTube video system ready');
+        console.log('👑 Admin access: admin@ysm.com / admin123');
     </script>
 </body>
 </html>
+
+fix this admin uid in the code where its suosed to be OK1OugEkINVckgUbsz4I8SPBGrz2 its an auth of fire base
