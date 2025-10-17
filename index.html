@@ -6,7 +6,10 @@
     <title>YSM - YouTube Subs Monetization</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://www.youtube.com/iframe_api"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
     
     <style>
         :root {
@@ -299,6 +302,17 @@
             margin-top: 80px;
         }
 
+        .admin-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .admin-nav button {
+            padding: 10px 20px;
+        }
+
         .admin-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -522,6 +536,28 @@
             margin-bottom: 15px;
         }
 
+        /* Payment Methods */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .payment-method {
+            background: var(--glass-bg);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .payment-method.selected {
+            border-color: var(--primary-red);
+        }
+
         /* Mobile Responsive */
         @media (max-width: 768px) {
             .container {
@@ -542,6 +578,10 @@
             
             .feature-grid, .testimonial-grid {
                 grid-template-columns: 1fr;
+            }
+            
+            .admin-nav {
+                flex-direction: column;
             }
         }
     </style>
@@ -577,7 +617,7 @@
             <div class="container">
                 <h1 style="font-size: 3.5rem; margin-bottom: 25px;">🌍 Welcome to YSM — Where Attention Becomes Wealth</h1>
                 <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 30px;">
-                    Get paid for watching YouTube videos. Simple, secure, and profitable. Join thousands of users earning daily with our revolutionary platform.
+                    In the digital world, attention is the new currency. Every like, every view, every click has value — but for years, that value has only flowed in one direction: away from the users who create it. YSM (YouTube Subs Monetization) was built to change that.
                 </p>
                 <div class="auth-buttons">
                     <button class="btn btn-primary btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('register-page')">
@@ -593,7 +633,13 @@
         <!-- How It Works -->
         <section class="marketing-section" style="background: var(--dark-gray);">
             <div class="container">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">How It Works</h2>
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">💼 How It Works — Partnership, Not Payment</h2>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 40px;">
+                    Every activation tier represents your digital partnership level in the YSM ecosystem. Your contribution helps power sponsored ad campaigns, influencer collaborations, and marketing operations that feed our global reward pool. As the system grows, so does your share of the flow. Each task you complete helps boost platform engagement, attract new sponsors, and increase your potential rewards.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 40px; color: var(--primary-red); font-weight: bold;">
+                    💡 Think of it as turning your time online into a growing digital asset.
+                </p>
                 <div class="feature-grid">
                     <div class="feature-card smooth-3d">
                         <div class="feature-icon">📝</div>
@@ -614,30 +660,76 @@
             </div>
         </section>
 
-        <!-- Growth Features -->
+        <!-- Growth by Design -->
         <section class="marketing-section" style="background: var(--black);">
             <div class="container">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">Why Choose YSM?</h2>
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">📈 Growth by Design</h2>
                 <div class="feature-grid">
                     <div class="feature-card smooth-3d">
-                        <div class="feature-icon">📈</div>
+                        <div class="feature-icon">🕒</div>
                         <h3 style="margin-bottom: 15px;">Daily Rewards</h3>
-                        <p>Earn consistently with daily tasks and bonuses</p>
+                        <p>Earn by completing simple video-based tasks</p>
                     </div>
                     <div class="feature-card smooth-3d">
-                        <div class="feature-icon">🏆</div>
+                        <div class="feature-icon">🔝</div>
                         <h3 style="margin-bottom: 15px;">Tier Levels</h3>
-                        <p>Upgrade your tier to unlock higher earning potential</p>
+                        <p>Choose your earning tier — from Starter to Elite — and scale as your returns grow</p>
                     </div>
                     <div class="feature-card smooth-3d">
-                        <div class="feature-icon">🚀</div>
+                        <div class="feature-icon">💰</div>
                         <h3 style="margin-bottom: 15px;">Compound Growth</h3>
-                        <p>Your earnings grow exponentially with our tier system</p>
+                        <p>Each month's performance builds on the last, unlocking greater long-term returns</p>
                     </div>
                     <div class="feature-card smooth-3d">
-                        <div class="feature-icon">👥</div>
+                        <div class="feature-icon">🌐</div>
                         <h3 style="margin-bottom: 15px;">Community Ecosystem</h3>
-                        <p>Join a thriving community of earners and creators</p>
+                        <p>Your success contributes to platform growth — meaning more users, more campaigns, more revenue</p>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 40px auto 0; color: var(--primary-red); font-weight: bold;">
+                    ✨ You're not just a user. You're part of the system that fuels itself.
+                </p>
+            </div>
+        </section>
+
+        <!-- The Vision -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">🚀 The Vision — Millions United by Growth</h2>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 30px;">
+                    Our goal is to empower over 1 million digital partners who earn, grow, and evolve together. We're not building another "task app" — we're creating a digital wealth ecosystem that rewards participation, not speculation.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 30px; font-weight: bold;">
+                    Every action matters. Every view counts. Every day adds up.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 30px auto 0; color: var(--primary-red); font-style: italic;">
+                    💬 "The future doesn't belong to those who work harder — it belongs to those who work smarter."
+                </p>
+            </div>
+        </section>
+
+        <!-- Success Stories -->
+        <section class="marketing-section" style="background: var(--black);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">🌟 Success Stories</h2>
+                <div class="testimonial-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">JD</div>
+                        <h3 style="margin-bottom: 10px;">John D. - New York</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $1,250 in 3 months</p>
+                        <p>"I was skeptical at first, but YSM has completely changed how I earn online. The platform is easy to use and payments are always on time. I've upgraded to the $769.23 tier and my earnings have tripled!"</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">SM</div>
+                        <h3 style="margin-bottom: 10px;">Sarah M. - London</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $2,800 in 6 months</p>
+                        <p>"As a student, YSM has been a game-changer. I can earn while studying. The tier system really works! I started with the basic tier and now I'm at the $1,692.31 level. The compound growth is incredible."</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">RK</div>
+                        <h3 style="margin-bottom: 10px;">Robert K. - Nairobi</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $5,100 in 1 year</p>
+                        <p>"The referral program is amazing. I've built a team of 15 people and earn passive income from their activities. YSM has given me financial freedom I never thought possible."</p>
                     </div>
                 </div>
             </div>
@@ -679,72 +771,6 @@
                 </div>
                 <div style="text-align: center; margin-top: 30px;">
                     <button class="btn btn-primary btn-3d" onclick="showPage('register-page')">Start Earning Now</button>
-                </div>
-            </div>
-        </section>
-
-        <!-- Video Preview Grid -->
-        <section class="marketing-section" style="background: var(--black);">
-            <div class="container">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">Active Campaigns</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
-                    <div class="feature-card">
-                        <div style="width: 100%; height: 200px; background: var(--medium-gray); border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fab fa-youtube" style="font-size: 3rem; color: var(--primary-red);"></i>
-                        </div>
-                        <h3>Tech Review Channel</h3>
-                        <p style="margin: 10px 0;">Subscribe and earn $2.56</p>
-                        <button class="btn btn-outline" onclick="showPage('register-page')">Sign In to Access</button>
-                    </div>
-                    <div class="feature-card">
-                        <div style="width: 100%; height: 200px; background: var(--medium-gray); border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fab fa-youtube" style="font-size: 3rem; color: var(--primary-red);"></i>
-                        </div>
-                        <h3>Gaming Channel</h3>
-                        <p style="margin: 10px 0;">Subscribe and earn $3.15</p>
-                        <button class="btn btn-outline" onclick="showPage('register-page')">Sign In to Access</button>
-                    </div>
-                    <div class="feature-card">
-                        <div style="width: 100%; height: 200px; background: var(--medium-gray); border-radius: 10px; margin-bottom: 15px; display: flex; align-items: center; justify-content: center;">
-                            <i class="fab fa-youtube" style="font-size: 3rem; color: var(--primary-red);"></i>
-                        </div>
-                        <h3>Music Channel</h3>
-                        <p style="margin: 10px 0;">Subscribe and earn $2.89</p>
-                        <button class="btn btn-outline" onclick="showPage('register-page')">Sign In to Access</button>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <!-- Social Proof -->
-        <section class="marketing-section" style="background: var(--dark-gray);">
-            <div class="container">
-                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">Trust & Social Proof</h2>
-                <div class="testimonial-grid">
-                    <div class="testimonial-card">
-                        <div class="testimonial-avatar">JD</div>
-                        <h3 style="margin-bottom: 10px;">John D.</h3>
-                        <p style="color: var(--success); margin-bottom: 10px;">Earned $1,250 in 3 months</p>
-                        <p>"YSM has completely changed how I earn online. The platform is easy to use and payments are always on time."</p>
-                    </div>
-                    <div class="testimonial-card">
-                        <div class="testimonial-avatar">SM</div>
-                        <h3 style="margin-bottom: 10px;">Sarah M.</h3>
-                        <p style="color: var(--success); margin-bottom: 10px;">Earned $2,800 in 6 months</p>
-                        <p>"I was skeptical at first, but after my first withdrawal, I was hooked. The tier system really works!"</p>
-                    </div>
-                    <div class="testimonial-card">
-                        <div class="testimonial-avatar">RK</div>
-                        <h3 style="margin-bottom: 10px;">Robert K.</h3>
-                        <p style="color: var(--success); margin-bottom: 10px;">Earned $5,100 in 1 year</p>
-                        <p>"The referral program is amazing. I've built a team of 15 people and earn passive income from their activities."</p>
-                    </div>
-                </div>
-                <div style="text-align: center; margin-top: 40px;">
-                    <div class="glassmorphism" style="display: inline-block; padding: 20px 40px;">
-                        <h3 style="margin-bottom: 15px;">Works with YouTube Embeds</h3>
-                        <p>Our platform integrates seamlessly with YouTube's standard player for a smooth user experience.</p>
-                    </div>
                 </div>
             </div>
         </section>
@@ -794,24 +820,6 @@
         <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="registerUser()">Create Account</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
-        </p>
-    </div>
-
-    <!-- OTP Verification Page -->
-    <div id="otp-verification-page" class="page form-container">
-        <h2 class="form-title">Verify Your Account</h2>
-        <p style="text-align: center; margin-bottom: 25px;">
-            We've sent a verification code to your email and phone
-        </p>
-        <div class="form-group">
-            <input type="text" class="form-control" id="email-otp" placeholder="Email OTP Code" required>
-        </div>
-        <div class="form-group">
-            <input type="text" class="form-control" id="sms-otp" placeholder="SMS OTP Code" required>
-        </div>
-        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="verifyOTP()">Verify & Continue</button>
-        <p style="text-align: center; margin-top: 20px;">
-            <a href="#" style="color: var(--primary-red);" onclick="resendOTP()">Resend Codes</a>
         </p>
     </div>
 
@@ -1030,6 +1038,37 @@
         <div class="dashboard-content" id="dashboard-wallet" style="display: none;">
             <div style="padding: 20px;">
                 <h3 style="margin-bottom: 20px;">💳 Wallet & Withdrawals</h3>
+                
+                <!-- Payment Method Binding -->
+                <div class="wallet-card">
+                    <h4>🔗 Bind Payment Method</h4>
+                    <div class="payment-methods">
+                        <div class="payment-method" onclick="selectPaymentMethod('paypal')">
+                            <i class="fab fa-paypal" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>PayPal</div>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod('binance')">
+                            <i class="fas fa-wallet" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>Binance</div>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod('mpesa')">
+                            <i class="fas fa-mobile-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>M-Pesa</div>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod('airtel')">
+                            <i class="fas fa-sim-card" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>Airtel Money</div>
+                        </div>
+                    </div>
+                    <div id="payment-details" style="margin-top: 20px; display: none;">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="payment-account" placeholder="Enter account details">
+                        </div>
+                        <button class="btn btn-primary" onclick="savePaymentMethod()">Save Payment Method</button>
+                    </div>
+                </div>
+
+                <!-- Withdrawal History -->
                 <div class="wallet-card">
                     <h4>Withdrawal History</h4>
                     <div id="withdrawal-history">
@@ -1099,10 +1138,10 @@
     <div id="admin-login-page" class="page form-container">
         <h2 class="form-title">Admin Login</h2>
         <div class="form-group">
-            <input type="text" class="form-control" id="admin-username" placeholder="Admin Username" value="admin" required>
+            <input type="text" class="form-control" id="admin-username" placeholder="Admin Username" required>
         </div>
         <div class="form-group">
-            <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" value="admin123" required>
+            <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" required>
         </div>
         <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="loginAdmin()">Access Admin Panel</button>
         <p style="text-align: center; margin-top: 20px;">
@@ -1126,7 +1165,18 @@
         <div class="admin-panel">
             <h2 style="margin-bottom: 30px;">👑 Admin Dashboard</h2>
             
-            <div class="admin-grid">
+            <!-- Admin Navigation -->
+            <div class="admin-nav">
+                <button class="btn btn-primary" onclick="loadAdminStats()">Dashboard</button>
+                <button class="btn btn-primary" onclick="loadKYCManagement()">KYC Management</button>
+                <button class="btn btn-primary" onclick="loadUserManagement()">User Management</button>
+                <button class="btn btn-primary" onclick="loadAdsManagement()">Ads Management</button>
+                <button class="btn btn-primary" onclick="loadWithdrawalManagement()">Withdrawals</button>
+                <button class="btn btn-primary" onclick="loadTierManagement()">Tier Settings</button>
+            </div>
+            
+            <!-- Dashboard Stats -->
+            <div id="admin-stats" class="admin-grid">
                 <div class="admin-card">
                     <h3 style="color: var(--primary-red); margin-bottom: 15px;">📊 Platform Stats</h3>
                     <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="total-users">0</div>
@@ -1138,19 +1188,11 @@
                 </div>
                 
                 <div class="admin-card">
-                    <h3 style="color: var(--primary-red); margin-bottom: 15px;">⚡ Quick Actions</h3>
-                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="loadKYCManagement()">
-                        Manage KYC Requests
-                    </button>
-                    <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="loadUserManagement()">
-                        User Management
-                    </button>
-                    <button class="btn btn-warning" style="width: 100%; margin-bottom: 10px;" onclick="loadAdsManagement()">
-                        Ads Management
-                    </button>
-                    <button class="btn btn-danger" style="width: 100%;" onclick="loadWithdrawalManagement()">
-                        Withdrawal Management
-                    </button>
+                    <h3 style="color: var(--primary-red); margin-bottom: 15px;">💰 Financial Overview</h3>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="total-earnings">$0</div>
+                    <div>Total Platform Earnings</div>
+                    <div style="margin-top: 15px; font-size: 1.5rem; font-weight: bold; color: var(--warning);" id="total-withdrawals">$0</div>
+                    <div>Total Withdrawals</div>
                 </div>
 
                 <div class="admin-card">
@@ -1214,23 +1256,28 @@
                 </div>
             </div>
 
-            <!-- Broadcast Management -->
-            <div id="broadcast-management" class="admin-card" style="margin-top: 20px; display: none;">
-                <h3 style="color: var(--primary-red); margin-bottom: 20px;">📢 Broadcast Messages</h3>
-                <div class="form-group">
-                    <label>Message</label>
-                    <textarea class="form-control" id="broadcast-message" placeholder="Enter your message" rows="4"></textarea>
+            <!-- Tier Management -->
+            <div id="tier-management" class="admin-card" style="margin-top: 20px; display: none;">
+                <h3 style="color: var(--primary-red); margin-bottom: 20px;">📊 Tier Management</h3>
+                <div class="tier-table-container" style="overflow-x: auto;">
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Ads/Day</th>
+                                <th>Pay/Ad</th>
+                                <th>Daily</th>
+                                <th>Monthly</th>
+                                <th>6-Month</th>
+                                <th>1-Year</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tier-list">
+                            <!-- Tiers will be loaded here -->
+                        </tbody>
+                    </table>
                 </div>
-                <div class="form-group">
-                    <label>Send To</label>
-                    <select class="form-control" id="broadcast-audience">
-                        <option value="all">All Users</option>
-                        <option value="basic">Basic Tier</option>
-                        <option value="premium">Premium Tier</option>
-                        <option value="pro">Pro Tier</option>
-                    </select>
-                </div>
-                <button class="btn btn-primary" onclick="sendBroadcast()">Send Broadcast</button>
             </div>
         </div>
     </div>
@@ -1326,109 +1373,102 @@
     </div>
 
     <script>
-        // YouTube video links from your prompt
-        const youtubeLinks = [
-            "https://youtu.be/Il9lcAzynWw",
-            "https://youtu.be/bVqhNPYYUno",
-            "https://youtu.be/DWEkzYRE2nk",
-            "https://youtu.be/1kAI6TKpiqI",
-            "https://youtu.be/H2RhIdf0MXo",
-            "https://youtu.be/qe5dJCRWifo",
-            "https://youtu.be/MTtiyKc8f2g",
-            "https://youtu.be/l3RyWY_PXTw",
-            "https://youtu.be/kOcEK5TGXV8",
-            "https://youtu.be/zOqdQUOTjV0",
-            "https://youtu.be/ajsZ3rrLxjs",
-            "https://youtu.be/D3RO2xNKS6s",
-            "https://youtu.be/iLwsPnywFc0",
-            "https://youtu.be/eFJ4_QEfu64",
-            "https://youtu.be/MTtiyKc8f2g",
-            "https://youtu.be/ds9PWKjmUlE",
-            "https://youtu.be/Brrmj9z7QLw",
-            "https://youtu.be/Dz4yad8kz9g",
-            "https://youtu.be/BZi6G6oinlk",
-            "https://youtu.be/w2yFwbYITMg",
-            "https://youtu.be/rXuXyGHMAog",
-            "https://youtu.be/CDjOdTeyNPI",
-            "https://youtu.be/eOMhOjgNd7Q",
-            "https://youtu.be/UnEQvsOa-3g",
-            "https://youtu.be/0Ab-F7Y3IXc",
-            "https://youtu.be/2l8dNRfZit0",
-            "https://youtu.be/OeFxd7xKFXk",
-            "https://youtu.be/WRX8VGvllEY",
-            "https://youtu.be/xAuK1iDL44A",
-            "https://youtu.be/jSWGA1YITFA",
-            "https://youtu.be/CEL6Uldh4lc",
-            "https://youtu.be/4vLOvPBczwc"
-        ];
-
-        // Application State
-        let currentUser = null;
-        let userId = null;
-        let videoPlayers = {};
-        let taskTimers = {};
-        let userData = {
-            users: [],
-            kycSubmissions: [],
-            tasks: [],
-            withdrawals: []
+        // ==================== FIREBASE CONFIGURATION ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyDOKJQayF5j5xCp6LVZEEFFJH0QiQtezgg",
+            authDomain: "ysm-platform-6ef20.firebaseapp.com",
+            projectId: "ysm-platform-6ef20",
+            storageBucket: "ysm-platform-6ef20.firebasestorage.app",
+            messagingSenderId: "485407332553",
+            appId: "1:485407332553:web:77bd1bf2b3146486e51518"
         };
 
-        // File upload handlers
-        document.getElementById('kyc-front').addEventListener('change', function(e) {
-            document.getElementById('front-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
-        });
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const auth = firebase.auth();
+        const storage = firebase.storage();
 
-        document.getElementById('kyc-back').addEventListener('change', function(e) {
-            document.getElementById('back-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
-        });
+        // ==================== APPLICATION STATE ====================
+        const ADMIN_UID = "OK1OugEkINVckgUbsz4I8SPBGrz2";
+        let currentUser = null;
+        let userId = null;
+        let isAdmin = false;
 
-        document.getElementById('kyc-selfie').addEventListener('change', function(e) {
-            document.getElementById('selfie-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
-        });
+        // Tier system configuration
+        const tierSystem = {
+            "115.38": { adsPerDay: 8, payPerAd: 0.48, daily: 3.85, monthly: 115.38, sixMonth: 692.31, oneYear: 1384.62 },
+            "192.31": { adsPerDay: 10, payPerAd: 0.64, daily: 6.41, monthly: 192.31, sixMonth: 1153.85, oneYear: 2307.69 },
+            "269.23": { adsPerDay: 12, payPerAd: 0.75, daily: 8.97, monthly: 269.23, sixMonth: 1615.38, oneYear: 3230.77 },
+            "307.69": { adsPerDay: 13, payPerAd: 0.79, daily: 10.26, monthly: 307.69, sixMonth: 1846.15, oneYear: 3692.31 },
+            "461.54": { adsPerDay: 15, payPerAd: 1.03, daily: 15.38, monthly: 461.54, sixMonth: 2769.23, oneYear: 5538.46 },
+            "615.38": { adsPerDay: 17, payPerAd: 1.21, daily: 20.51, monthly: 615.38, sixMonth: 3692.31, oneYear: 7384.62 },
+            "769.23": { adsPerDay: 18, payPerAd: 1.43, daily: 25.64, monthly: 769.23, sixMonth: 4615.38, oneYear: 9230.77 },
+            "923.08": { adsPerDay: 20, payPerAd: 1.54, daily: 30.77, monthly: 923.08, sixMonth: 5538.46, oneYear: 11076.92 },
+            "1692.31": { adsPerDay: 25, payPerAd: 2.26, daily: 56.41, monthly: 1692.31, sixMonth: 10153.85, oneYear: 20307.69 },
+            "2461.54": { adsPerDay: 30, payPerAd: 2.74, daily: 82.05, monthly: 2461.54, sixMonth: 14769.23, oneYear: 29538.46 },
+            "3230.77": { adsPerDay: 35, payPerAd: 3.08, daily: 107.69, monthly: 3230.77, sixMonth: 19384.62, oneYear: 38769.23 },
+            "4000.00": { adsPerDay: 40, payPerAd: 3.33, daily: 133.33, monthly: 4000.00, sixMonth: 24000.00, oneYear: 48000.00 },
+            "4615.38": { adsPerDay: 45, payPerAd: 3.42, daily: 153.85, monthly: 4615.38, sixMonth: 27692.31, oneYear: 55384.62 }
+        };
 
-        document.getElementById('kyc-address').addEventListener('change', function(e) {
-            document.getElementById('address-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
-        });
+        // YouTube video links
+        const youtubeLinks = [
+            "https://youtu.be/Il9lcAzynWw", "https://youtu.be/bVqhNPYYUno", "https://youtu.be/DWEkzYRE2nk",
+            "https://youtu.be/1kAI6TKpiqI", "https://youtu.be/H2RhIdf0MXo", "https://youtu.be/qe5dJCRWifo",
+            "https://youtu.be/MTtiyKc8f2g", "https://youtu.be/l3RyWY_PXTw", "https://youtu.be/kOcEK5TGXV8",
+            "https://youtu.be/zOqdQUOTjV0", "https://youtu.be/ajsZ3rrLxjs", "https://youtu.be/D3RO2xNKS6s",
+            "https://youtu.be/iLwsPnywFc0", "https://youtu.be/eFJ4_QEfu64", "https://youtu.be/MTtiyKc8f2g",
+            "https://youtu.be/ds9PWKjmUlE", "https://youtu.be/Brrmj9z7QLw", "https://youtu.be/Dz4yad8kz9g",
+            "https://youtu.be/BZi6G6oinlk", "https://youtu.be/w2yFwbYITMg", "https://youtu.be/rXuXyGHMAog",
+            "https://youtu.be/CDjOdTeyNPI", "https://youtu.be/eOMhOjgNd7Q", "https://youtu.be/UnEQvsOa-3g",
+            "https://youtu.be/0Ab-F7Y3IXc", "https://youtu.be/2l8dNRfZit0", "https://youtu.be/OeFxd7xKFXk",
+            "https://youtu.be/WRX8VGvllEY", "https://youtu.be/xAuK1iDL44A", "https://youtu.be/jSWGA1YITFA",
+            "https://youtu.be/CEL6Uldh4lc", "https://youtu.be/4vLOvPBczwc"
+        ];
 
-        // Initialize application
-        function initApp() {
-            loadUserData();
-            checkURLParams();
-            
-            // Initialize some sample tasks if none exist
-            if (userData.tasks.length === 0) {
-                initializeSampleTasks();
+        // ==================== FIREBASE AUTH LISTENER ====================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                userId = user.uid;
+                isAdmin = (userId === ADMIN_UID);
+                
+                try {
+                    if (isAdmin) {
+                        // Admin user - show admin dashboard directly
+                        showPage('admin-dashboard');
+                        loadAdminStats();
+                    } else {
+                        // Regular user - load user data
+                        const userDoc = await db.collection('users').doc(userId).get();
+                        if (userDoc.exists) {
+                            currentUser = userDoc.data();
+                            currentUser.id = userId;
+                            updateUserUI();
+                            
+                            if (currentUser.kycStatus === 'approved') {
+                                showPage('user-dashboard');
+                            } else if (currentUser.kycStatus === 'pending') {
+                                showPage('kyc-pending-page');
+                            } else {
+                                showPage('kyc-page');
+                                document.getElementById('kyc-name').value = currentUser.name || '';
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    showError('Error loading user data');
+                }
+            } else {
+                currentUser = null;
+                userId = null;
+                isAdmin = false;
+                showPage('landing-page');
             }
-            
-            console.log('🚀 YSM Platform - Complete Version Loaded!');
-            console.log('📹 YouTube video system ready');
-            console.log('👑 Admin access: admin / admin123');
-        }
+        });
 
-        // Load user data from localStorage
-        function loadUserData() {
-            const savedData = localStorage.getItem('ysmUserData');
-            if (savedData) {
-                userData = JSON.parse(savedData);
-            }
-        }
-
-        // Save user data to localStorage
-        function saveUserData() {
-            localStorage.setItem('ysmUserData', JSON.stringify(userData));
-        }
-
-        // Check URL for referral parameters
-        function checkURLParams() {
-            const urlParams = new URLSearchParams(window.location.search);
-            const refCode = urlParams.get('ref');
-            if (refCode) {
-                localStorage.setItem('referralCode', refCode);
-            }
-        }
-
-        // UI Functions
+        // ==================== UI FUNCTIONS ====================
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
         }
@@ -1458,8 +1498,8 @@
             alert('✅ ' + message);
         }
 
-        // Auth Functions
-        function registerUser() {
+        // ==================== AUTHENTICATION FUNCTIONS ====================
+        async function registerUser() {
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
             const phone = document.getElementById('reg-phone').value;
@@ -1472,112 +1512,87 @@
             }
 
             showLoading();
-            
-            // Check if user already exists
-            const existingUser = userData.users.find(u => u.email === email);
-            if (existingUser) {
-                hideLoading();
-                showError('User with this email already exists');
-                return;
-            }
+            try {
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+                const user = userCredential.user;
+                
+                await db.collection('users').doc(user.uid).set({
+                    name: name,
+                    email: email,
+                    phone: phone,
+                    country: country,
+                    balance: 0,
+                    pendingBalance: 0,
+                    referralEarnings: 0,
+                    tier: '115.38',
+                    tierData: tierSystem["115.38"],
+                    kycStatus: 'none',
+                    withdrawalPin: generatePIN(),
+                    dailyWatchCount: 0,
+                    canEarn: false,
+                    referralCode: generateReferralCode(),
+                    totalReferrals: 0,
+                    joinDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    totalWithdrawn: 0,
+                    paymentMethods: {}
+                });
 
-            // Create new user
-            const newUser = {
-                id: generateId(),
-                name: name,
-                email: email,
-                phone: phone,
-                country: country,
-                password: password, // In real app, this would be hashed
-                balance: 0,
-                pendingBalance: 0,
-                referralEarnings: 0,
-                tier: 'basic',
-                kycStatus: 'none',
-                withdrawalPin: generatePIN(),
-                dailyWatchCount: 0,
-                adsPerDay: 8,
-                payPerAd: 0.48,
-                canEarn: false,
-                referralCode: generateReferralCode(),
-                totalReferrals: 0,
-                joinDate: new Date().toISOString(),
-                referredBy: localStorage.getItem('referralCode') || null
-            };
-
-            userData.users.push(newUser);
-            saveUserData();
-            
-            // Auto login
-            currentUser = newUser;
-            userId = newUser.id;
-            
-            hideLoading();
-            showSuccess('Registration successful! Please verify your account.');
-            showPage('otp-verification-page');
-        }
-
-        function verifyOTP() {
-            const emailOTP = document.getElementById('email-otp').value;
-            const smsOTP = document.getElementById('sms-otp').value;
-
-            if (!emailOTP || !smsOTP) {
-                showError('Please enter both OTP codes');
-                return;
-            }
-
-            // In a real app, we would verify against sent codes
-            // For demo, any 6-digit code works
-            if (emailOTP.length === 6 && smsOTP.length === 6) {
-                showSuccess('Account verified successfully! Please complete KYC.');
+                showSuccess('Registration successful! Please complete KYC verification.');
                 showPage('kyc-page');
-                document.getElementById('kyc-name').value = currentUser.name;
-            } else {
-                showError('Invalid OTP codes. Please try again.');
+                document.getElementById('kyc-name').value = name;
+            } catch (error) {
+                showError(error.message);
             }
+            hideLoading();
         }
 
-        function resendOTP() {
-            showSuccess('New verification codes sent to your email and phone');
-        }
-
-        function loginUser() {
+        async function loginUser() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
 
             showLoading();
-            
-            const user = userData.users.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                currentUser = user;
-                userId = user.id;
-                
-                updateUserUI();
-                
-                if (user.kycStatus === 'approved') {
-                    showPage('user-dashboard');
-                } else if (user.kycStatus === 'pending') {
-                    showPage('kyc-pending-page');
-                } else {
-                    showPage('kyc-page');
-                    document.getElementById('kyc-name').value = user.name;
-                }
-            } else {
-                showError('Invalid email or password');
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                // Auth state listener will handle the rest
+            } catch (error) {
+                showError('Error: ' + error.message);
             }
-            
             hideLoading();
         }
 
-        function logout() {
-            currentUser = null;
-            userId = null;
-            showPage('landing-page');
+        async function loginAdmin() {
+            const username = document.getElementById('admin-username').value;
+            const password = document.getElementById('admin-password').value;
+
+            showLoading();
+            try {
+                // For admin, we sign in with the admin UID
+                if (username === 'admin' && password === 'admin123') {
+                    // Sign in with admin credentials (you need to set this up in Firebase Auth)
+                    await auth.signInWithEmailAndPassword('admin@ysm.com', 'admin123');
+                } else {
+                    showError('Invalid admin credentials');
+                }
+            } catch (error) {
+                showError('Admin login failed: ' + error.message);
+            }
+            hideLoading();
         }
 
-        // KYC Functions
-        function submitKYC() {
+        async function logout() {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                userId = null;
+                isAdmin = false;
+                showPage('landing-page');
+            } catch (error) {
+                console.error('Error signing out:', error);
+            }
+        }
+
+        // ==================== KYC FUNCTIONS ====================
+        async function submitKYC() {
             const name = document.getElementById('kyc-name').value;
             const idType = document.getElementById('kyc-id-type').value;
             const idNumber = document.getElementById('kyc-id-number').value;
@@ -1592,584 +1607,218 @@
             }
 
             showLoading();
-            
-            // Create KYC submission
-            const kycSubmission = {
-                id: generateId(),
-                userId: userId,
-                name: name,
-                idType: idType,
-                idNumber: idNumber,
-                filesUploaded: true,
-                status: 'pending',
-                submittedAt: new Date().toISOString()
-            };
+            try {
+                // Upload files to Firebase Storage
+                const frontUrl = await uploadFile(frontImage, `kyc/${userId}/front`);
+                const backUrl = await uploadFile(backImage, `kyc/${userId}/back`);
+                const selfieUrl = await uploadFile(selfieImage, `kyc/${userId}/selfie`);
+                const addressUrl = await uploadFile(addressImage, `kyc/${userId}/address`);
 
-            userData.kycSubmissions.push(kycSubmission);
-            
-            // Update user KYC status
-            const userIndex = userData.users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
-                userData.users[userIndex].kycStatus = 'pending';
+                // Create KYC submission
+                await db.collection('kycSubmissions').doc(userId).set({
+                    userId: userId,
+                    name: name,
+                    idType: idType,
+                    idNumber: idNumber,
+                    frontImage: frontUrl,
+                    backImage: backUrl,
+                    selfieImage: selfieUrl,
+                    addressImage: addressUrl,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Update user KYC status
+                await db.collection('users').doc(userId).update({
+                    kycStatus: 'pending'
+                });
+
                 currentUser.kycStatus = 'pending';
+                showSuccess('KYC submitted successfully! Your documents are under review.');
+                showPage('kyc-pending-page');
+                updateUserUI();
+            } catch (error) {
+                showError('Error submitting KYC: ' + error.message);
             }
-            
-            saveUserData();
-            
             hideLoading();
-            showSuccess('KYC submitted successfully! Your documents are under review.');
-            showPage('kyc-pending-page');
-            updateUserUI();
         }
 
-        // Admin Functions
-        function loginAdmin() {
-            const username = document.getElementById('admin-username').value;
-            const password = document.getElementById('admin-password').value;
+        async function uploadFile(file, path) {
+            const storageRef = storage.ref().child(path);
+            await storageRef.put(file);
+            return await storageRef.getDownloadURL();
+        }
 
-            if (username === 'admin' && password === 'admin123') {
-                showPage('admin-dashboard');
-                showSuccess('Admin login successful!');
-            } else {
-                showError('Invalid admin credentials');
+        // ==================== ADMIN FUNCTIONS ====================
+        async function loadAdminStats() {
+            showAdminSection('admin-stats');
+            
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                document.getElementById('total-users').textContent = usersSnapshot.size;
+                
+                const kycSnapshot = await db.collection('kycSubmissions').where('status', '==', 'pending').get();
+                document.getElementById('pending-kyc').textContent = kycSnapshot.size;
+                
+                const withdrawalsSnapshot = await db.collection('withdrawals').where('status', '==', 'pending').get();
+                document.getElementById('pending-withdrawals').textContent = withdrawalsSnapshot.size;
+                
+                // Calculate totals
+                let totalEarnings = 0;
+                let totalWithdrawals = 0;
+                
+                usersSnapshot.forEach(doc => {
+                    const user = doc.data();
+                    totalEarnings += user.balance + (user.totalWithdrawn || 0);
+                });
+                
+                const approvedWithdrawals = await db.collection('withdrawals').where('status', '==', 'approved').get();
+                approvedWithdrawals.forEach(doc => {
+                    totalWithdrawals += doc.data().amount;
+                });
+                
+                document.getElementById('total-earnings').textContent = '$' + totalEarnings.toFixed(2);
+                document.getElementById('total-withdrawals').textContent = '$' + totalWithdrawals.toFixed(2);
+            } catch (error) {
+                console.error('Error loading admin stats:', error);
             }
         }
 
-        function loadAdminStats() {
-            document.getElementById('total-users').textContent = userData.users.length;
-            
-            const pendingKYC = userData.kycSubmissions.filter(k => k.status === 'pending').length;
-            document.getElementById('pending-kyc').textContent = pendingKYC;
-            
-            const pendingWithdrawals = userData.withdrawals.filter(w => w.status === 'pending').length;
-            document.getElementById('pending-withdrawals').textContent = pendingWithdrawals;
-        }
-
-        function loadKYCManagement() {
+        async function loadKYCManagement() {
             showAdminSection('kyc-management');
             const kycList = document.getElementById('kyc-list');
             
-            const pendingKYC = userData.kycSubmissions.filter(k => k.status === 'pending');
-            
-            if (pendingKYC.length === 0) {
-                kycList.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No pending KYC requests</p>';
-                return;
-            }
+            try {
+                const snapshot = await db.collection('kycSubmissions').where('status', '==', 'pending').get();
+                
+                if (snapshot.empty) {
+                    kycList.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No pending KYC requests</p>';
+                    return;
+                }
 
-            let html = '';
-            pendingKYC.forEach(kyc => {
-                const user = userData.users.find(u => u.id === kyc.userId);
-                html += `
-                    <div class="user-item">
-                        <div>
-                            <div style="font-weight: bold;">${kyc.name}</div>
-                            <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                ${user.email} • ${kyc.idType} • ${kyc.idNumber}
-                            </div>
-                            <div style="font-size: 0.8rem; color: var(--warning);">
-                                Submitted: ${new Date(kyc.submittedAt).toLocaleDateString()}
-                            </div>
-                        </div>
-                        <div>
-                            <button class="btn btn-success" onclick="approveKYC('${kyc.id}')">Approve</button>
-                            <button class="btn btn-danger" onclick="rejectKYC('${kyc.id}')">Reject</button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            kycList.innerHTML = html;
-        }
-
-        function loadUserManagement() {
-            showAdminSection('user-management');
-            const userList = document.getElementById('user-list');
-            
-            let html = '';
-            userData.users.forEach(user => {
-                html += `
-                    <div class="user-item">
-                        <div>
-                            <div style="font-weight: bold;">${user.name}</div>
-                            <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                ${user.email} • ${user.tier} Tier
-                            </div>
-                            <div class="badge badge-${user.kycStatus}">${user.kycStatus}</div>
-                        </div>
-                        <div class="balance-control">
-                            <input type="number" class="balance-input" value="${user.balance}" id="balance-${user.id}">
-                            <button class="btn btn-success" onclick="updateUserBalance('${user.id}')">Update</button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            userList.innerHTML = html;
-        }
-
-        function loadAdsManagement() {
-            showAdminSection('ads-management');
-            const adsList = document.getElementById('ads-list');
-            
-            let html = '';
-            if (userData.tasks.length === 0) {
-                html = '<p style="text-align: center; padding: 20px; color: var(--light-gray);">No tasks available</p>';
-            } else {
-                userData.tasks.forEach(task => {
+                let html = '';
+                for (const doc of snapshot.docs) {
+                    const kyc = doc.data();
+                    const userDoc = await db.collection('users').doc(kyc.userId).get();
+                    const user = userDoc.data();
+                    
                     html += `
                         <div class="user-item">
                             <div>
-                                <div style="font-weight: bold;">${task.title || 'YouTube Task'}</div>
+                                <div style="font-weight: bold;">${kyc.name}</div>
                                 <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                    ${task.youtubeUrl}
+                                    ${user.email} • ${kyc.idType} • ${kyc.idNumber}
                                 </div>
-                                <div style="font-size: 0.8rem;">
-                                    Pay: $${task.payPerAd} • Tiers: ${task.assignedTiers.join(', ')}
+                                <div style="font-size: 0.8rem; color: var(--warning);">
+                                    Submitted: ${new Date(kyc.submittedAt?.toDate()).toLocaleDateString()}
                                 </div>
                             </div>
                             <div>
-                                <button class="btn btn-danger" onclick="deleteTask('${task.id}')">Delete</button>
+                                <button class="btn btn-success" onclick="approveKYC('${doc.id}')">Approve</button>
+                                <button class="btn btn-danger" onclick="rejectKYC('${doc.id}')">Reject</button>
                             </div>
                         </div>
                     `;
+                }
+                
+                kycList.innerHTML = html;
+            } catch (error) {
+                kycList.innerHTML = `<p style="color: var(--primary-red); text-align: center;">Error loading KYC: ${error.message}</p>`;
+            }
+        }
+
+        async function approveKYC(kycId) {
+            try {
+                await db.collection('kycSubmissions').doc(kycId).update({
+                    status: 'approved',
+                    processedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
-            }
-            
-            adsList.innerHTML = html;
-        }
 
-        function bulkAddVideos() {
-            const linksText = document.getElementById('bulk-youtube-links').value;
-            const links = linksText.split('\n').filter(link => link.trim());
-            
-            if (links.length === 0) {
-                showError('Please enter at least one YouTube link');
-                return;
-            }
+                await db.collection('users').doc(kycId).update({
+                    kycStatus: 'approved',
+                    canEarn: true
+                });
 
-            showLoading();
-            
-            let addedCount = 0;
-            links.forEach(link => {
-                const videoId = extractYouTubeId(link);
-                if (videoId) {
-                    const newTask = {
-                        id: generateId(),
-                        youtubeUrl: link,
-                        videoId: videoId,
-                        title: 'YouTube Subscription Task',
-                        payPerAd: 2.56,
-                        assignedTiers: ['basic', 'premium', 'pro'],
-                        active: true,
-                        dailyLimit: 1000,
-                        maxPerUserPerDay: 1,
-                        createdAt: new Date().toISOString()
-                    };
-                    
-                    userData.tasks.push(newTask);
-                    addedCount++;
-                }
-            });
-            
-            saveUserData();
-            hideLoading();
-            showSuccess(`Added ${addedCount} videos as tasks`);
-            loadAdsManagement();
-        }
-
-        function extractYouTubeId(url) {
-            const regex = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/;
-            const match = url.match(regex);
-            return match ? match[1] : null;
-        }
-
-        function showAdminSection(sectionId) {
-            document.getElementById('kyc-management').style.display = 'none';
-            document.getElementById('user-management').style.display = 'none';
-            document.getElementById('ads-management').style.display = 'none';
-            document.getElementById('withdrawal-management').style.display = 'none';
-            document.getElementById('broadcast-management').style.display = 'none';
-            document.getElementById(sectionId).style.display = 'block';
-        }
-
-        function approveKYC(kycId) {
-            const kycIndex = userData.kycSubmissions.findIndex(k => k.id === kycId);
-            if (kycIndex !== -1) {
-                userData.kycSubmissions[kycIndex].status = 'approved';
-                userData.kycSubmissions[kycIndex].processedAt = new Date().toISOString();
-                
-                const userId = userData.kycSubmissions[kycIndex].userId;
-                const userIndex = userData.users.findIndex(u => u.id === userId);
-                if (userIndex !== -1) {
-                    userData.users[userIndex].kycStatus = 'approved';
-                    userData.users[userIndex].canEarn = true;
-                }
-                
-                saveUserData();
                 showSuccess('KYC approved! User can now earn money.');
                 loadKYCManagement();
                 loadAdminStats();
+            } catch (error) {
+                showError('Error approving KYC: ' + error.message);
             }
         }
 
-        function rejectKYC(kycId) {
-            const kycIndex = userData.kycSubmissions.findIndex(k => k.id === kycId);
-            if (kycIndex !== -1) {
-                userData.kycSubmissions[kycIndex].status = 'rejected';
-                userData.kycSubmissions[kycIndex].processedAt = new Date().toISOString();
-                
-                const userId = userData.kycSubmissions[kycIndex].userId;
-                const userIndex = userData.users.findIndex(u => u.id === userId);
-                if (userIndex !== -1) {
-                    userData.users[userIndex].kycStatus = 'rejected';
-                    userData.users[userIndex].canEarn = false;
-                }
-                
-                saveUserData();
+        async function rejectKYC(kycId) {
+            try {
+                await db.collection('kycSubmissions').doc(kycId).update({
+                    status: 'rejected',
+                    processedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                await db.collection('users').doc(kycId).update({
+                    kycStatus: 'rejected',
+                    canEarn: false
+                });
+
                 showSuccess('KYC rejected! User must resubmit documents.');
                 loadKYCManagement();
                 loadAdminStats();
+            } catch (error) {
+                showError('Error rejecting KYC: ' + error.message);
             }
         }
 
-        function updateUserBalance(userId) {
-            const newBalance = parseFloat(document.getElementById(`balance-${userId}`).value);
-            const userIndex = userData.users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
-                userData.users[userIndex].balance = newBalance;
-                saveUserData();
-                showSuccess('Balance updated successfully!');
-            }
-        }
-
-        // User Dashboard Functions
-        function loadUserDashboard() {
+        // ==================== USER DASHBOARD FUNCTIONS ====================
+        async function loadUserDashboard() {
             if (!currentUser || currentUser.kycStatus !== 'approved') return;
             
             updateUserUI();
-            loadTasks();
+            await loadTasks();
             updateDailyProgress();
         }
 
-        function loadTasks() {
+        async function loadTasks() {
             const tasksContainer = document.getElementById('tasks-container');
             const tasksPageContainer = document.getElementById('tasks-page-container');
             
-            const userTasks = userData.tasks.filter(task => 
-                task.active && task.assignedTiers.includes(currentUser.tier)
-            );
-            
-            if (userTasks.length === 0) {
-                tasksContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available at the moment. Check back later!</p>';
-                tasksPageContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available at the moment. Check back later!</p>';
-                return;
-            }
-
-            let html = '';
-            userTasks.forEach(task => {
-                html += `
-                    <div class="task-card">
-                        <div class="video-container">
-                            <iframe src="https://www.youtube.com/embed/${task.videoId}" frameborder="0" allowfullscreen></iframe>
-                            <div class="task-timer" id="timer-${task.id}">10s</div>
-                        </div>
-                        <h4>${task.title}</h4>
-                        <p>Earn $${task.payPerAd} per subscription</p>
-                        <button class="subscribe-btn" id="btn-${task.id}" onclick="startTask('${task.id}')" disabled>
-                            Start Watching to Enable
-                        </button>
-                    </div>
-                `;
-            });
-            
-            tasksContainer.innerHTML = html;
-            tasksPageContainer.innerHTML = html;
-        }
-
-        function startTask(taskId) {
-            if (currentUser.dailyWatchCount >= currentUser.adsPerDay) {
-                showError('Daily task limit reached! Come back tomorrow.');
-                return;
-            }
-
-            showLoading();
-            
-            // Simulate task completion
-            setTimeout(() => {
-                const task = userData.tasks.find(t => t.id === taskId);
-                if (task) {
-                    const earnings = task.payPerAd;
-                    const newBalance = currentUser.balance + earnings;
-                    const newWatchCount = currentUser.dailyWatchCount + 1;
-                    
-                    // Update user balance
-                    const userIndex = userData.users.findIndex(u => u.id === userId);
-                    if (userIndex !== -1) {
-                        userData.users[userIndex].balance = newBalance;
-                        userData.users[userIndex].dailyWatchCount = newWatchCount;
-                        currentUser.balance = newBalance;
-                        currentUser.dailyWatchCount = newWatchCount;
-                    }
-                    
-                    saveUserData();
-                    updateUserUI();
-                    updateDailyProgress();
-                    
-                    showSuccess(`Task completed! $${earnings} added to your wallet.`);
+            try {
+                const snapshot = await db.collection('tasks').where('active', '==', true).get();
+                const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+                
+                if (tasks.length === 0) {
+                    tasksContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available at the moment. Check back later!</p>';
+                    tasksPageContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available at the moment. Check back later!</p>';
+                    return;
                 }
-                
-                hideLoading();
-            }, 2000);
-        }
 
-        function updateDailyProgress() {
-            const progressText = document.getElementById('daily-progress-text');
-            const progressBar = document.getElementById('daily-progress-bar');
-            
-            if (currentUser) {
-                const progress = (currentUser.dailyWatchCount / currentUser.adsPerDay) * 100;
-                progressText.textContent = `${currentUser.dailyWatchCount}/${currentUser.adsPerDay}`;
-                progressBar.style.width = `${progress}%`;
-            }
-        }
-
-        // Dashboard Navigation
-        function showDashboardSection(section) {
-            // Hide all sections
-            document.getElementById('dashboard-home').style.display = 'none';
-            document.getElementById('dashboard-tasks').style.display = 'none';
-            document.getElementById('dashboard-wallet').style.display = 'none';
-            document.getElementById('dashboard-profile').style.display = 'none';
-            
-            // Show selected section
-            document.getElementById(`dashboard-${section}`).style.display = 'block';
-            
-            // Update navigation
-            document.querySelectorAll('.nav-item').forEach(item => {
-                item.classList.remove('active');
-            });
-            event.target.classList.add('active');
-            
-            // Load section-specific data
-            if (section === 'profile') {
-                loadProfileData();
-            } else if (section === 'wallet') {
-                loadWithdrawalHistory();
-            }
-        }
-
-        function loadProfileData() {
-            document.getElementById('profile-name').value = currentUser.name;
-            document.getElementById('profile-email').value = currentUser.email;
-            document.getElementById('profile-phone').value = currentUser.phone;
-            document.getElementById('profile-country').value = currentUser.country;
-            document.getElementById('profile-tier').value = currentUser.tier;
-            document.getElementById('profile-join-date').value = new Date(currentUser.joinDate).toLocaleDateString();
-        }
-
-        function loadWithdrawalHistory() {
-            const userWithdrawals = userData.withdrawals.filter(w => w.userId === userId);
-            const historyContainer = document.getElementById('withdrawal-history');
-            
-            if (userWithdrawals.length === 0) {
-                historyContainer.innerHTML = '<p style="text-align: center; padding: 20px; color: var(--light-gray);">No withdrawal history yet</p>';
-                return;
-            }
-            
-            let html = '';
-            userWithdrawals.forEach(withdrawal => {
-                html += `
-                    <div class="user-item">
-                        <div>
-                            <div style="font-weight: bold;">$${withdrawal.amount} via ${withdrawal.method}</div>
-                            <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                ${new Date(withdrawal.requestedAt).toLocaleDateString()}
+                let html = '';
+                tasks.forEach(task => {
+                    if (task.assignedTiers.includes(currentUser.tier)) {
+                        const embedUrl = `https://www.youtube.com/embed/${task.videoId}?rel=0&modestbranding=1&controls=1&showinfo=0`;
+                        
+                        html += `
+                            <div class="task-card">
+                                <div class="video-container">
+                                    <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    <div class="task-timer" id="timer-${task.id}">10s</div>
+                                </div>
+                                <h4>${task.title}</h4>
+                                <p>Earn $${currentUser.tierData.payPerAd.toFixed(2)} per subscription (Tier: $${currentUser.tier})</p>
+                                <button class="subscribe-btn" id="btn-${task.id}" onclick="startTask('${task.id}')" disabled>
+                                    Start Watching to Enable
+                                </button>
                             </div>
-                        </div>
-                        <div class="badge badge-${withdrawal.status}">${withdrawal.status}</div>
-                    </div>
-                `;
-            });
-            
-            historyContainer.innerHTML = html;
-        }
-
-        // Withdrawal Functions
-        function showWithdrawModal() {
-            if (currentUser.kycStatus !== 'approved') {
-                showError('Please complete KYC verification first!');
-                return;
-            }
-            document.getElementById('withdraw-modal').style.display = 'block';
-            document.getElementById('withdraw-amount').max = currentUser.balance;
-        }
-
-        function closeWithdrawModal() {
-            document.getElementById('withdraw-modal').style.display = 'none';
-            document.querySelectorAll('.pin-input').forEach(input => input.value = '');
-        }
-
-        function moveToNext(input, nextIndex) {
-            if (input.value.length === 1) {
-                const nextInput = document.querySelectorAll('.pin-input')[nextIndex];
-                if (nextInput) nextInput.focus();
-            }
-        }
-
-        function submitWithdrawal() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const method = document.getElementById('withdraw-method').value;
-            
-            if (amount < 5) {
-                showError('Minimum withdrawal amount is $5');
-                return;
-            }
-
-            if (amount > currentUser.balance) {
-                showError('Insufficient balance');
-                return;
-            }
-
-            const pinInputs = document.querySelectorAll('.pin-input');
-            const enteredPin = Array.from(pinInputs).map(input => input.value).join('');
-            
-            if (enteredPin !== currentUser.withdrawalPin) {
-                showError('Invalid PIN! Please try again.');
-                return;
-            }
-
-            // Create withdrawal request
-            const withdrawal = {
-                id: generateId(),
-                userId: userId,
-                amount: amount,
-                method: method,
-                status: 'pending',
-                requestedAt: new Date().toISOString()
-            };
-
-            userData.withdrawals.push(withdrawal);
-            
-            // Update user balance
-            const newBalance = currentUser.balance - amount;
-            const userIndex = userData.users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
-                userData.users[userIndex].balance = newBalance;
-                currentUser.balance = newBalance;
-            }
-            
-            saveUserData();
-            updateUserUI();
-            
-            showSuccess(`Withdrawal request submitted! $${amount} will be processed within 24-72 hours.`);
-            closeWithdrawModal();
-        }
-
-        // PIN Change Functions
-        function showChangePINModal() {
-            document.getElementById('change-pin-modal').style.display = 'block';
-        }
-
-        function closeChangePINModal() {
-            document.getElementById('change-pin-modal').style.display = 'none';
-            document.querySelectorAll('.pin-input').forEach(input => input.value = '');
-        }
-
-        function changePIN() {
-            const currentPinInputs = document.querySelectorAll('.pin-input:not(.new-pin)');
-            const currentPin = Array.from(currentPinInputs).map(input => input.value).join('');
-            
-            const newPinInputs = document.querySelectorAll('.pin-input.new-pin');
-            const newPin = Array.from(newPinInputs).map(input => input.value).join('');
-            
-            if (currentPin !== currentUser.withdrawalPin) {
-                showError('Current PIN is incorrect');
-                return;
-            }
-            
-            if (newPin.length !== 6) {
-                showError('New PIN must be 6 digits');
-                return;
-            }
-            
-            // Update PIN
-            const userIndex = userData.users.findIndex(u => u.id === userId);
-            if (userIndex !== -1) {
-                userData.users[userIndex].withdrawalPin = newPin;
-                currentUser.withdrawalPin = newPin;
-                saveUserData();
-                showSuccess('PIN changed successfully!');
-                closeChangePINModal();
-            }
-        }
-
-        // Referral Functions
-        function copyReferralLink() {
-            const referralLink = document.getElementById('referral-link');
-            referralLink.select();
-            document.execCommand('copy');
-            showSuccess('Referral link copied to clipboard!');
-        }
-
-        // Notification Functions
-        function toggleNotifications() {
-            const panel = document.getElementById('notifications-panel');
-            panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function toggleChat() {
-            const chatModal = document.getElementById('chat-modal');
-            chatModal.style.display = chatModal.style.display === 'none' ? 'block' : 'none';
-        }
-
-        function closeChat() {
-            document.getElementById('chat-modal').style.display = 'none';
-        }
-
-        function sendChatMessage() {
-            const input = document.getElementById('chat-input');
-            const message = input.value.trim();
-            
-            if (message) {
-                const messagesContainer = document.getElementById('chat-messages');
-                const messageElement = document.createElement('div');
-                messageElement.style.marginBottom = '10px';
-                messageElement.style.padding = '10px';
-                messageElement.style.background = 'var(--primary-red)';
-                messageElement.style.borderRadius = '10px';
-                messageElement.innerHTML = `
-                    <div style="font-weight: bold;">You</div>
-                    <div>${message}</div>
-                `;
+                        `;
+                    }
+                });
                 
-                messagesContainer.appendChild(messageElement);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                
-                input.value = '';
-                
-                // Simulate response
-                setTimeout(() => {
-                    const responseElement = document.createElement('div');
-                    responseElement.style.marginBottom = '10px';
-                    responseElement.style.padding = '10px';
-                    responseElement.style.background = 'var(--medium-gray)';
-                    responseElement.style.borderRadius = '10px';
-                    responseElement.innerHTML = `
-                        <div style="font-weight: bold;">Support</div>
-                        <div>Thank you for your message. Our team will get back to you shortly.</div>
-                    `;
-                    
-                    messagesContainer.appendChild(responseElement);
-                    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-                }, 1000);
+                tasksContainer.innerHTML = html;
+                tasksPageContainer.innerHTML = html;
+            } catch (error) {
+                console.error('Error loading tasks:', error);
             }
         }
 
-        // Utility Functions
-        function generateId() {
-            return Math.random().toString(36).substring(2) + Date.now().toString(36);
-        }
-
+        // ==================== UTILITY FUNCTIONS ====================
         function generatePIN() {
             return Math.floor(100000 + Math.random() * 900000).toString();
         }
@@ -2182,12 +1831,11 @@
             if (currentUser) {
                 document.getElementById('user-display-name').textContent = currentUser.name;
                 document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
-                document.getElementById('user-balance').textContent = '$' + currentUser.balance.toFixed(2);
+                document.getElementById('user-balance').textContent = '$' + (currentUser.balance || 0).toFixed(2);
                 document.getElementById('user-pending').textContent = '$' + (currentUser.pendingBalance || 0).toFixed(2);
                 document.getElementById('user-referral').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
-                document.getElementById('user-tier-display').textContent = currentUser.tier.toUpperCase() + ' Tier';
+                document.getElementById('user-tier-display').textContent = '$' + currentUser.tier + ' Tier';
                 
-                // Referral section
                 document.getElementById('referral-link').value = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode}`;
                 document.getElementById('referral-count').textContent = currentUser.totalReferrals || 0;
                 document.getElementById('referral-earnings').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
@@ -2198,30 +1846,34 @@
             }
         }
 
-        function initializeSampleTasks() {
-            // Add sample tasks from the YouTube links
-            youtubeLinks.slice(0, 5).forEach(link => {
-                const videoId = extractYouTubeId(link);
-                if (videoId) {
-                    userData.tasks.push({
-                        id: generateId(),
-                        youtubeUrl: link,
-                        videoId: videoId,
-                        title: 'YouTube Subscription Task',
-                        payPerAd: 2.56,
-                        assignedTiers: ['basic', 'premium', 'pro'],
-                        active: true,
-                        dailyLimit: 1000,
-                        maxPerUserPerDay: 1,
-                        createdAt: new Date().toISOString()
-                    });
-                }
-            });
-            saveUserData();
+        function updateDailyProgress() {
+            const progressText = document.getElementById('daily-progress-text');
+            const progressBar = document.getElementById('daily-progress-bar');
+            
+            if (currentUser && currentUser.tierData) {
+                const progress = (currentUser.dailyWatchCount / currentUser.tierData.adsPerDay) * 100;
+                progressText.textContent = `${currentUser.dailyWatchCount}/${currentUser.tierData.adsPerDay}`;
+                progressBar.style.width = `${progress}%`;
+            }
         }
 
-        // Initialize the application when the page loads
-        window.onload = initApp;
+        function showAdminSection(sectionId) {
+            document.getElementById('admin-stats').style.display = 'none';
+            document.getElementById('kyc-management').style.display = 'none';
+            document.getElementById('user-management').style.display = 'none';
+            document.getElementById('ads-management').style.display = 'none';
+            document.getElementById('withdrawal-management').style.display = 'none';
+            document.getElementById('tier-management').style.display = 'none';
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        // Initialize the application
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('🚀 YSM Platform - Proper Admin UID Integration Loaded!');
+            console.log('📹 YouTube video system ready');
+            console.log('👑 Admin UID: ' + ADMIN_UID);
+            console.log('🔐 Regular users can register/login normally');
+        });
     </script>
 </body>
 </html>
