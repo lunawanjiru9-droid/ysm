@@ -1392,7 +1392,6 @@
 
     <script>
         // ==================== FIREBASE CONFIGURATION ====================
-        // Replace these with your actual Firebase config from Firebase Console
         const firebaseConfig = {
             apiKey: "AIzaSyDOKJQayF5j5xCp6LVZEEFFJH0QiQtezgg",
             authDomain: "ysm-platform-6ef20.firebaseapp.com",
@@ -1411,12 +1410,7 @@
         // ==================== APPLICATION STATE ====================
         let currentUser = null;
         let userId = null;
-        let userData = {
-            users: [],
-            kycSubmissions: [],
-            tasks: [],
-            withdrawals: []
-        };
+        const ADMIN_UID = 'OK1OugEkINVckgUbsz4I8SPBGrz2';
 
         // Tier system configuration
         const tierSystem = {
@@ -1454,25 +1448,57 @@
         auth.onAuthStateChanged(async (user) => {
             if (user) {
                 userId = user.uid;
-                try {
-                    const userDoc = await db.collection('users').doc(userId).get();
-                    if (userDoc.exists) {
-                        currentUser = userDoc.data();
-                        currentUser.id = userId;
-                        updateUserUI();
-                        
-                        if (currentUser.kycStatus === 'approved') {
-                            showPage('user-dashboard');
-                        } else if (currentUser.kycStatus === 'pending') {
-                            showPage('kyc-pending-page');
-                        } else {
-                            showPage('kyc-page');
-                            document.getElementById('kyc-name').value = currentUser.name;
+                
+                // Check if this is the admin user
+                if (userId === ADMIN_UID) {
+                    // Admin user - show admin dashboard directly
+                    try {
+                        const userDoc = await db.collection('users').doc(userId).get();
+                        if (!userDoc.exists) {
+                            // Create admin user document if it doesn't exist
+                            await db.collection('users').doc(userId).set({
+                                name: 'YSM Administrator',
+                                email: user.email || 'admin@ysm.com',
+                                role: 'admin',
+                                kycStatus: 'approved',
+                                joinDate: firebase.firestore.FieldValue.serverTimestamp()
+                            });
                         }
+                        currentUser = { id: userId, role: 'admin', kycStatus: 'approved' };
+                        showPage('admin-dashboard');
+                        loadAdminStats();
+                    } catch (error) {
+                        console.error('Error loading admin data:', error);
+                        showError('Error loading admin data');
                     }
-                } catch (error) {
-                    console.error('Error loading user data:', error);
-                    showError('Error loading user data');
+                } else {
+                    // Regular user flow
+                    try {
+                        const userDoc = await db.collection('users').doc(userId).get();
+                        if (userDoc.exists) {
+                            currentUser = userDoc.data();
+                            currentUser.id = userId;
+                            updateUserUI();
+                            
+                            if (currentUser.kycStatus === 'approved') {
+                                showPage('user-dashboard');
+                            } else if (currentUser.kycStatus === 'pending') {
+                                showPage('kyc-pending-page');
+                            } else {
+                                showPage('kyc-page');
+                                if (currentUser.name) {
+                                    document.getElementById('kyc-name').value = currentUser.name;
+                                }
+                            }
+                        } else {
+                            // User document doesn't exist - this shouldn't happen but handle it
+                            showError('User data not found. Please contact support.');
+                            await auth.signOut();
+                        }
+                    } catch (error) {
+                        console.error('Error loading user data:', error);
+                        showError('Error loading user data. Please try again.');
+                    }
                 }
             } else {
                 currentUser = null;
@@ -1550,8 +1576,9 @@
                     paymentMethods: {}
                 });
 
-                showSuccess('Registration successful! Please verify your account.');
-                showPage('otp-verification-page');
+                showSuccess('Registration successful! Please complete KYC verification.');
+                showPage('kyc-page');
+                document.getElementById('kyc-name').value = name;
             } catch (error) {
                 showError(error.message);
             }
@@ -1583,79 +1610,21 @@
             }
         }
 
-        // ==================== KYC FUNCTIONS ====================
-        async function submitKYC() {
-            const name = document.getElementById('kyc-name').value;
-            const idType = document.getElementById('kyc-id-type').value;
-            const idNumber = document.getElementById('kyc-id-number').value;
-            const frontImage = document.getElementById('kyc-front').files[0];
-            const backImage = document.getElementById('kyc-back').files[0];
-            const selfieImage = document.getElementById('kyc-selfie').files[0];
-            const addressImage = document.getElementById('kyc-address').files[0];
-
-            if (!name || !idType || !idNumber || !frontImage || !backImage || !selfieImage || !addressImage) {
-                showError('All fields and file uploads are REQUIRED for KYC verification');
-                return;
-            }
-
-            showLoading();
-            try {
-                // Upload files to Firebase Storage
-                const frontUrl = await uploadFile(frontImage, `kyc/${userId}/front`);
-                const backUrl = await uploadFile(backImage, `kyc/${userId}/back`);
-                const selfieUrl = await uploadFile(selfieImage, `kyc/${userId}/selfie`);
-                const addressUrl = await uploadFile(addressImage, `kyc/${userId}/address`);
-
-                // Create KYC submission
-                await db.collection('kycSubmissions').doc(userId).set({
-                    userId: userId,
-                    name: name,
-                    idType: idType,
-                    idNumber: idNumber,
-                    frontImage: frontUrl,
-                    backImage: backUrl,
-                    selfieImage: selfieUrl,
-                    addressImage: addressUrl,
-                    status: 'pending',
-                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Update user KYC status
-                await db.collection('users').doc(userId).update({
-                    kycStatus: 'pending'
-                });
-
-                currentUser.kycStatus = 'pending';
-                showSuccess('KYC submitted successfully! Your documents are under review.');
-                showPage('kyc-pending-page');
-                updateUserUI();
-            } catch (error) {
-                showError('Error submitting KYC: ' + error.message);
-            }
-            hideLoading();
-        }
-
-        async function uploadFile(file, path) {
-            const storageRef = storage.ref().child(path);
-            await storageRef.put(file);
-            return await storageRef.getDownloadURL();
-        }
-
         // ==================== ADMIN FUNCTIONS ====================
-        function loginAdmin() {
+        async function loginAdmin() {
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
 
             if (username === 'admin' && password === 'admin123') {
-                // For admin, we'll use a special admin user in Firebase
-                auth.signInWithEmailAndPassword('admin@ysm.com', 'admin123')
-                    .then(() => {
-                        showPage('admin-dashboard');
-                        showSuccess('Admin login successful!');
-                    })
-                    .catch(() => {
-                        showError('Admin authentication failed');
-                    });
+                showLoading();
+                try {
+                    // Try to sign in with the admin account
+                    await auth.signInWithEmailAndPassword('admin@ysm.com', 'admin123');
+                    // The auth state listener will handle the rest and check the UID
+                } catch (error) {
+                    showError('Admin authentication failed: ' + error.message);
+                }
+                hideLoading();
             } else {
                 showError('Invalid admin credentials');
             }
@@ -1718,7 +1687,7 @@
                             <div>
                                 <div style="font-weight: bold;">${kyc.name}</div>
                                 <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                    ${user.email} • ${kyc.idType} • ${kyc.idNumber}
+                                    ${user?.email || 'N/A'} • ${kyc.idType} • ${kyc.idNumber}
                                 </div>
                                 <div style="font-size: 0.8rem; color: var(--warning);">
                                     Submitted: ${new Date(kyc.submittedAt?.toDate()).toLocaleDateString()}
@@ -1778,6 +1747,66 @@
             }
         }
 
+        // ==================== KYC FUNCTIONS ====================
+        async function submitKYC() {
+            const name = document.getElementById('kyc-name').value;
+            const idType = document.getElementById('kyc-id-type').value;
+            const idNumber = document.getElementById('kyc-id-number').value;
+            const frontImage = document.getElementById('kyc-front').files[0];
+            const backImage = document.getElementById('kyc-back').files[0];
+            const selfieImage = document.getElementById('kyc-selfie').files[0];
+            const addressImage = document.getElementById('kyc-address').files[0];
+
+            if (!name || !idType || !idNumber || !frontImage || !backImage || !selfieImage || !addressImage) {
+                showError('All fields and file uploads are REQUIRED for KYC verification');
+                return;
+            }
+
+            showLoading();
+            try {
+                // Upload files to Firebase Storage
+                const frontUrl = await uploadFile(frontImage, `kyc/${userId}/front`);
+                const backUrl = await uploadFile(backImage, `kyc/${userId}/back`);
+                const selfieUrl = await uploadFile(selfieImage, `kyc/${userId}/selfie`);
+                const addressUrl = await uploadFile(addressImage, `kyc/${userId}/address`);
+
+                // Create KYC submission
+                await db.collection('kycSubmissions').doc(userId).set({
+                    userId: userId,
+                    name: name,
+                    idType: idType,
+                    idNumber: idNumber,
+                    frontImage: frontUrl,
+                    backImage: backUrl,
+                    selfieImage: selfieUrl,
+                    addressImage: addressUrl,
+                    status: 'pending',
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Update user KYC status
+                await db.collection('users').doc(userId).update({
+                    kycStatus: 'pending',
+                    name: name // Update name if changed
+                });
+
+                currentUser.kycStatus = 'pending';
+                currentUser.name = name;
+                showSuccess('KYC submitted successfully! Your documents are under review.');
+                showPage('kyc-pending-page');
+                updateUserUI();
+            } catch (error) {
+                showError('Error submitting KYC: ' + error.message);
+            }
+            hideLoading();
+        }
+
+        async function uploadFile(file, path) {
+            const storageRef = storage.ref().child(path);
+            await storageRef.put(file);
+            return await storageRef.getDownloadURL();
+        }
+
         // ==================== USER DASHBOARD FUNCTIONS ====================
         async function loadUserDashboard() {
             if (!currentUser || currentUser.kycStatus !== 'approved') return;
@@ -1803,7 +1832,7 @@
 
                 let html = '';
                 tasks.forEach(task => {
-                    if (task.assignedTiers.includes(currentUser.tier)) {
+                    if (task.assignedTiers && task.assignedTiers.includes(currentUser.tier)) {
                         const embedUrl = `https://www.youtube.com/embed/${task.videoId}?rel=0&modestbranding=1&controls=1&showinfo=0`;
                         
                         html += `
@@ -1812,8 +1841,8 @@
                                     <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
                                     <div class="task-timer" id="timer-${task.id}">10s</div>
                                 </div>
-                                <h4>${task.title}</h4>
-                                <p>Earn $${currentUser.tierData.payPerAd.toFixed(2)} per subscription (Tier: $${currentUser.tier})</p>
+                                <h4>${task.title || 'YouTube Video'}</h4>
+                                <p>Earn $${currentUser.tierData?.payPerAd?.toFixed(2) || '0.00'} per subscription (Tier: $${currentUser.tier})</p>
                                 <button class="subscribe-btn" id="btn-${task.id}" onclick="startTask('${task.id}')" disabled>
                                     Start Watching to Enable
                                 </button>
@@ -1822,10 +1851,15 @@
                     }
                 });
                 
+                if (html === '') {
+                    html = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available for your tier. Upgrade to access more tasks!</p>';
+                }
+                
                 tasksContainer.innerHTML = html;
                 tasksPageContainer.innerHTML = html;
             } catch (error) {
                 console.error('Error loading tasks:', error);
+                tasksContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-red);">Error loading tasks. Please try again later.</p>';
             }
         }
 
@@ -1840,20 +1874,20 @@
 
         function updateUserUI() {
             if (currentUser) {
-                document.getElementById('user-display-name').textContent = currentUser.name;
-                document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
+                document.getElementById('user-display-name').textContent = currentUser.name || 'User';
+                document.getElementById('user-avatar').textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
                 document.getElementById('user-balance').textContent = '$' + (currentUser.balance || 0).toFixed(2);
                 document.getElementById('user-pending').textContent = '$' + (currentUser.pendingBalance || 0).toFixed(2);
                 document.getElementById('user-referral').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
-                document.getElementById('user-tier-display').textContent = '$' + currentUser.tier + ' Tier';
+                document.getElementById('user-tier-display').textContent = '$' + (currentUser.tier || '115.38') + ' Tier';
                 
-                document.getElementById('referral-link').value = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode}`;
+                document.getElementById('referral-link').value = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode || 'REFCODE'}`;
                 document.getElementById('referral-count').textContent = currentUser.totalReferrals || 0;
                 document.getElementById('referral-earnings').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
                 
                 const kycBadge = document.getElementById('kyc-status');
-                kycBadge.textContent = currentUser.kycStatus;
-                kycBadge.className = 'badge badge-' + currentUser.kycStatus;
+                kycBadge.textContent = currentUser.kycStatus || 'none';
+                kycBadge.className = 'badge badge-' + (currentUser.kycStatus || 'pending');
             }
         }
 
@@ -1863,7 +1897,7 @@
             
             if (currentUser && currentUser.tierData) {
                 const progress = (currentUser.dailyWatchCount / currentUser.tierData.adsPerDay) * 100;
-                progressText.textContent = `${currentUser.dailyWatchCount}/${currentUser.tierData.adsPerDay}`;
+                progressText.textContent = `${currentUser.dailyWatchCount || 0}/${currentUser.tierData.adsPerDay}`;
                 progressBar.style.width = `${progress}%`;
             }
         }
@@ -1878,12 +1912,25 @@
             document.getElementById(sectionId).style.display = 'block';
         }
 
+        // File upload handlers
+        document.getElementById('kyc-front').addEventListener('change', function(e) {
+            document.getElementById('front-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
+        });
+        document.getElementById('kyc-back').addEventListener('change', function(e) {
+            document.getElementById('back-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
+        });
+        document.getElementById('kyc-selfie').addEventListener('change', function(e) {
+            document.getElementById('selfie-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
+        });
+        document.getElementById('kyc-address').addEventListener('change', function(e) {
+            document.getElementById('address-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
+        });
+
         // Initialize the application
         console.log('🚀 YSM Platform - Firebase Version Loaded!');
         console.log('📹 YouTube video system ready');
-        console.log('👑 Admin access: admin@ysm.com / admin123');
+        console.log('👑 Admin UID: ' + ADMIN_UID);
+        console.log('🔐 Admin access: admin@ysm.com / admin123');
     </script>
 </body>
 </html>
-
-fix this admin uid in the code where its suosed to be OK1OugEkINVckgUbsz4I8SPBGrz2 its an auth of fire base
