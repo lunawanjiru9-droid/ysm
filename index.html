@@ -5,21 +5,25 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>YSM - YouTube Subs Monetization</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
     
     <style>
         :root {
-            --primary-red: #e53935;
-            --dark-red: #c62828;
-            --black: #121212;
-            --dark-gray: #1e1e1e;
-            --medium-gray: #2d2d2d;
-            --light-gray: #424242;
+            --primary-red: #E50914;
+            --dark-red: #b80710;
+            --black: #000000;
+            --dark-gray: #0a0a0a;
+            --medium-gray: #1a1a1a;
+            --light-gray: #333333;
             --white: #ffffff;
-            --success: #4caf50;
-            --warning: #ff9800;
+            --success: #00ff00;
+            --warning: #ffa500;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
         }
 
         * {
@@ -34,6 +38,7 @@
             color: var(--white);
             min-height: 100vh;
             line-height: 1.6;
+            overflow-x: hidden;
         }
 
         .container {
@@ -42,13 +47,37 @@
             padding: 0 20px;
         }
 
+        /* Glassmorphism Effect */
+        .glassmorphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+        }
+
+        .smooth-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .btn-3d {
+            transform: translateZ(20px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-3d:hover {
+            transform: translateZ(30px) translateY(-5px);
+            box-shadow: 0 15px 30px rgba(229, 9, 20, 0.4);
+        }
+
         header {
-            background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%);
+            background: var(--black);
             padding: 15px 0;
             position: fixed;
             width: 100%;
             top: 0;
             z-index: 1000;
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .header-content {
@@ -87,7 +116,7 @@
 
         .btn-primary:hover {
             transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(229, 57, 53, 0.4);
+            box-shadow: 0 5px 15px rgba(229, 9, 20, 0.4);
         }
 
         .btn-outline {
@@ -96,8 +125,8 @@
             border: 2px solid var(--white);
         }
 
-        .btn-success { background-color: var(--success); color: var(--white); }
-        .btn-warning { background-color: var(--warning); color: var(--white); }
+        .btn-success { background-color: var(--success); color: var(--black); }
+        .btn-warning { background-color: var(--warning); color: var(--black); }
         .btn-danger { background-color: var(--primary-red); color: var(--white); }
 
         .badge {
@@ -108,7 +137,7 @@
         }
 
         .badge-pending { background: var(--warning); color: var(--black); }
-        .badge-approved { background: var(--success); color: var(--white); }
+        .badge-approved { background: var(--success); color: var(--black); }
         .badge-rejected { background: var(--primary-red); color: var(--white); }
 
         .loading {
@@ -136,10 +165,12 @@
             max-width: 500px;
             margin: 100px auto;
             padding: 40px;
-            background: linear-gradient(135deg, var(--medium-gray) 0%, var(--dark-gray) 100%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
             border-radius: 15px;
             display: none;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
         }
 
         .form-title {
@@ -182,20 +213,23 @@
             justify-content: space-between;
             align-items: center;
             padding: 15px 20px;
-            background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%);
+            background: var(--black);
             position: fixed;
             top: 0;
             left: 0;
             right: 0;
             z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
         }
 
         .wallet-card {
-            background: linear-gradient(135deg, var(--medium-gray) 0%, var(--dark-gray) 100%);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
             padding: 25px;
             border-radius: 15px;
             margin: 20px;
             box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
         }
 
         .wallet-balance {
@@ -214,6 +248,7 @@
             right: 0;
             background: var(--dark-gray);
             padding: 12px 0;
+            border-top: 1px solid var(--glass-border);
         }
 
         .nav-item {
@@ -267,6 +302,17 @@
             margin-top: 80px;
         }
 
+        .admin-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .admin-nav button {
+            padding: 10px 20px;
+        }
+
         .admin-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
@@ -275,9 +321,11 @@
         }
 
         .admin-card {
-            background: var(--medium-gray);
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
             padding: 25px;
-            border-radius: 10px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
         }
 
         .user-list {
@@ -327,6 +375,215 @@
             color: var(--light-gray);
             margin-top: 10px;
         }
+
+        /* Task Video Styles */
+        .task-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .task-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .subscribe-btn:disabled {
+            background: var(--light-gray);
+            cursor: not-allowed;
+        }
+
+        .subscribe-btn:not(:disabled):hover {
+            background: var(--dark-red);
+            transform: translateY(-2px);
+        }
+
+        /* Tier Table Styles */
+        .tier-table {
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tier-table th {
+            background: var(--primary-red);
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tier-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .tier-table tr:hover {
+            background: var(--glass-bg);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: var(--light-gray);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary-red), var(--success));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* Marketing Sections */
+        .marketing-section {
+            padding: 80px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .testimonial-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .payment-method {
+            background: var(--glass-bg);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .payment-method.selected {
+            border-color: var(--primary-red);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .wallet-card {
+                margin: 10px;
+            }
+            
+            .tier-table {
+                font-size: 0.8rem;
+            }
+            
+            .video-container {
+                height: 200px;
+            }
+            
+            .feature-grid, .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-nav {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -355,17 +612,183 @@
             </div>
         </header>
 
-        <section style="background: linear-gradient(135deg, var(--black) 0%, var(--dark-gray) 100%); padding: 180px 0 100px; text-align: center;">
+        <!-- Hero Section -->
+        <section style="background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%); padding: 180px 0 100px; text-align: center;">
             <div class="container">
-                <h1 style="font-size: 3.5rem; margin-bottom: 25px;">YouTube Subs Monetization</h1>
+                <h1 style="font-size: 3.5rem; margin-bottom: 25px;">🌍 Welcome to YSM — Where Attention Becomes Wealth</h1>
                 <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 30px;">
-                    Earn money by subscribing to YouTube channels
+                    In the digital world, attention is the new currency. Every like, every view, every click has value — but for years, that value has only flowed in one direction: away from the users who create it. YSM (YouTube Subs Monetization) was built to change that.
                 </p>
-                <button class="btn btn-primary" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('register-page')">
-                    Start Earning Now
-                </button>
+                <div class="auth-buttons">
+                    <button class="btn btn-primary btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('register-page')">
+                        Join YSM Now
+                    </button>
+                    <button class="btn btn-outline btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('login-page')">
+                        Log In to Start Earning
+                    </button>
+                </div>
             </div>
         </section>
+
+        <!-- How It Works -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">💼 How It Works — Partnership, Not Payment</h2>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 40px;">
+                    Every activation tier represents your digital partnership level in the YSM ecosystem. Your contribution helps power sponsored ad campaigns, influencer collaborations, and marketing operations that feed our global reward pool. As the system grows, so does your share of the flow. Each task you complete helps boost platform engagement, attract new sponsors, and increase your potential rewards.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 40px; color: var(--primary-red); font-weight: bold;">
+                    💡 Think of it as turning your time online into a growing digital asset.
+                </p>
+                <div class="feature-grid">
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">📝</div>
+                        <h3 style="margin-bottom: 15px;">1. Register</h3>
+                        <p>Create your account in seconds with our secure registration process</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🔒</div>
+                        <h3 style="margin-bottom: 15px;">2. Complete KYC</h3>
+                        <p>Verify your identity with our secure and fast KYC process</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">💰</div>
+                        <h3 style="margin-bottom: 15px;">3. Watch & Earn</h3>
+                        <p>Get paid for watching sponsored YouTube videos and subscribing</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Growth by Design -->
+        <section class="marketing-section" style="background: var(--black);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">📈 Growth by Design</h2>
+                <div class="feature-grid">
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🕒</div>
+                        <h3 style="margin-bottom: 15px;">Daily Rewards</h3>
+                        <p>Earn by completing simple video-based tasks</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🔝</div>
+                        <h3 style="margin-bottom: 15px;">Tier Levels</h3>
+                        <p>Choose your earning tier — from Starter to Elite — and scale as your returns grow</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">💰</div>
+                        <h3 style="margin-bottom: 15px;">Compound Growth</h3>
+                        <p>Each month's performance builds on the last, unlocking greater long-term returns</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🌐</div>
+                        <h3 style="margin-bottom: 15px;">Community Ecosystem</h3>
+                        <p>Your success contributes to platform growth — meaning more users, more campaigns, more revenue</p>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 40px auto 0; color: var(--primary-red); font-weight: bold;">
+                    ✨ You're not just a user. You're part of the system that fuels itself.
+                </p>
+            </div>
+        </section>
+
+        <!-- The Vision -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">🚀 The Vision — Millions United by Growth</h2>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 30px;">
+                    Our goal is to empower over 1 million digital partners who earn, grow, and evolve together. We're not building another "task app" — we're creating a digital wealth ecosystem that rewards participation, not speculation.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 30px; font-weight: bold;">
+                    Every action matters. Every view counts. Every day adds up.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 30px auto 0; color: var(--primary-red); font-style: italic;">
+                    💬 "The future doesn't belong to those who work harder — it belongs to those who work smarter."
+                </p>
+            </div>
+        </section>
+
+        <!-- Success Stories -->
+        <section class="marketing-section" style="background: var(--black);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">🌟 Success Stories</h2>
+                <div class="testimonial-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">JD</div>
+                        <h3 style="margin-bottom: 10px;">John D. - New York</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $1,250 in 3 months</p>
+                        <p>"I was skeptical at first, but YSM has completely changed how I earn online. The platform is easy to use and payments are always on time. I've upgraded to the $769.23 tier and my earnings have tripled!"</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">SM</div>
+                        <h3 style="margin-bottom: 10px;">Sarah M. - London</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $2,800 in 6 months</p>
+                        <p>"As a student, YSM has been a game-changer. I can earn while studying. The tier system really works! I started with the basic tier and now I'm at the $1,692.31 level. The compound growth is incredible."</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">RK</div>
+                        <h3 style="margin-bottom: 10px;">Robert K. - Nairobi</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $5,100 in 1 year</p>
+                        <p>"The referral program is amazing. I've built a team of 15 people and earn passive income from their activities. YSM has given me financial freedom I never thought possible."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tier Table -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">Investment Tiers</h2>
+                <div class="tier-table-container" style="overflow-x: auto;">
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Ads/Day</th>
+                                <th>Pay/Ad</th>
+                                <th>Daily</th>
+                                <th>Monthly</th>
+                                <th>6-Month</th>
+                                <th>1-Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>$115.38</td><td>8</td><td>$0.48</td><td>$3.85</td><td>$115.38</td><td>$692.31</td><td>$1,384.62</td></tr>
+                            <tr><td>$192.31</td><td>10</td><td>$0.64</td><td>$6.41</td><td>$192.31</td><td>$1,153.85</td><td>$2,307.69</td></tr>
+                            <tr><td>$269.23</td><td>12</td><td>$0.75</td><td>$8.97</td><td>$269.23</td><td>$1,615.38</td><td>$3,230.77</td></tr>
+                            <tr><td>$307.69</td><td>13</td><td>$0.79</td><td>$10.26</td><td>$307.69</td><td>$1,846.15</td><td>$3,692.31</td></tr>
+                            <tr><td>$461.54</td><td>15</td><td>$1.03</td><td>$15.38</td><td>$461.54</td><td>$2,769.23</td><td>$5,538.46</td></tr>
+                            <tr><td>$615.38</td><td>17</td><td>$1.21</td><td>$20.51</td><td>$615.38</td><td>$3,692.31</td><td>$7,384.62</td></tr>
+                            <tr><td>$769.23</td><td>18</td><td>$1.43</td><td>$25.64</td><td>$769.23</td><td>$4,615.38</td><td>$9,230.77</td></tr>
+                            <tr><td>$923.08</td><td>20</td><td>$1.54</td><td>$30.77</td><td>$923.08</td><td>$5,538.46</td><td>$11,076.92</td></tr>
+                            <tr><td>$1,692.31</td><td>25</td><td>$2.26</td><td>$56.41</td><td>$1,692.31</td><td>$10,153.85</td><td>$20,307.69</td></tr>
+                            <tr><td>$2,461.54</td><td>30</td><td>$2.74</td><td>$82.05</td><td>$2,461.54</td><td>$14,769.23</td><td>$29,538.46</td></tr>
+                            <tr><td>$3,230.77</td><td>35</td><td>$3.08</td><td>$107.69</td><td>$3,230.77</td><td>$19,384.62</td><td>$38,769.23</td></tr>
+                            <tr><td>$4,000.00</td><td>40</td><td>$3.33</td><td>$133.33</td><td>$4,000.00</td><td>$24,000.00</td><td>$48,000.00</td></tr>
+                            <tr><td>$4,615.38</td><td>45</td><td>$3.42</td><td>$153.85</td><td>$4,615.38</td><td>$27,692.31</td><td>$55,384.62</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-primary btn-3d" onclick="showPage('register-page')">Start Earning Now</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="background: var(--black); padding: 40px 0; border-top: 1px solid var(--glass-border);">
+            <div class="container">
+                <div style="text-align: center;">
+                    <p>&copy; 2024 YSM - YouTube Subs Monetization. All rights reserved.</p>
+                    <div style="margin-top: 20px;">
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Terms</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Privacy</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Contact</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Support</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
 
     <!-- Registration Page -->
@@ -378,11 +801,43 @@
             <input type="email" class="form-control" id="reg-email" placeholder="Email Address" required>
         </div>
         <div class="form-group">
+            <input type="tel" class="form-control" id="reg-phone" placeholder="Phone Number" required>
+        </div>
+        <div class="form-group">
+            <select class="form-control" id="reg-country" required>
+                <option value="">Select Country</option>
+                <option value="us">United States</option>
+                <option value="uk">United Kingdom</option>
+                <option value="ke">Kenya</option>
+                <option value="ng">Nigeria</option>
+                <option value="za">South Africa</option>
+                <option value="in">India</option>
+            </select>
+        </div>
+        <div class="form-group">
             <input type="password" class="form-control" id="reg-password" placeholder="Create Password" required>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="registerUser()">Create Account</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="registerUser()">Create Account</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
+        </p>
+    </div>
+
+    <!-- OTP Verification Page -->
+    <div id="otp-verification-page" class="page form-container">
+        <h2 class="form-title">Verify Your Account</h2>
+        <p style="text-align: center; margin-bottom: 25px;">
+            We've sent a verification code to your email and phone
+        </p>
+        <div class="form-group">
+            <input type="text" class="form-control" id="email-otp" placeholder="Email OTP Code" required>
+        </div>
+        <div class="form-group">
+            <input type="text" class="form-control" id="sms-otp" placeholder="SMS OTP Code" required>
+        </div>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="verifyOTP()">Verify & Continue</button>
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="#" style="color: var(--primary-red);" onclick="resendOTP()">Resend Codes</a>
         </p>
     </div>
 
@@ -395,17 +850,17 @@
         <div class="form-group">
             <input type="password" class="form-control" id="login-password" placeholder="Password" required>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">Login</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="loginUser()">Login</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
         </p>
     </div>
 
-    <!-- KYC Page - COMPLETE WITH FILE UPLOAD -->
+    <!-- KYC Page -->
     <div id="kyc-page" class="page form-container">
         <h2 class="form-title">KYC Verification - REQUIRED</h2>
         <p style="text-align: center; margin-bottom: 25px; color: var(--warning);">
-            All documents are required for verification
+            All documents are required for verification before you can earn or withdraw
         </p>
         
         <div class="form-group">
@@ -425,7 +880,7 @@
             <input type="text" class="form-control" id="kyc-id-number" placeholder="ID Number" required>
         </div>
 
-        <!-- ID Front Image - REQUIRED -->
+        <!-- File Uploads -->
         <div class="form-group">
             <label>ID Front Image *</label>
             <div class="file-upload" onclick="document.getElementById('kyc-front').click()">
@@ -436,7 +891,6 @@
             </div>
         </div>
 
-        <!-- ID Back Image - REQUIRED -->
         <div class="form-group">
             <label>ID Back Image *</label>
             <div class="file-upload" onclick="document.getElementById('kyc-back').click()">
@@ -447,7 +901,6 @@
             </div>
         </div>
 
-        <!-- Selfie with ID - REQUIRED -->
         <div class="form-group">
             <label>Selfie with ID *</label>
             <div class="file-upload" onclick="document.getElementById('kyc-selfie').click()">
@@ -458,29 +911,39 @@
             </div>
         </div>
 
-        <button class="btn btn-primary" style="width: 100%;" onclick="submitKYC()">Submit KYC Verification</button>
+        <div class="form-group">
+            <label>Proof of Address *</label>
+            <div class="file-upload" onclick="document.getElementById('kyc-address').click()">
+                <i class="fas fa-home" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                <p>Click to upload Proof of Address</p>
+                <input type="file" id="kyc-address" style="display: none;" accept="image/*" required>
+                <div id="address-file-name" class="file-name">No file chosen</div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="submitKYC()">Submit KYC Verification</button>
     </div>
 
     <!-- KYC Pending Page -->
     <div id="kyc-pending-page" class="page form-container">
         <div style="text-align: center; padding: 40px;">
-            <div style="background: var(--warning); color: black; padding: 30px; border-radius: 15px; margin: 20px 0;">
+            <div class="glassmorphism" style="padding: 30px; border-radius: 15px; margin: 20px 0;">
                 <h2>🕒 KYC Verification Pending</h2>
                 <p>Your documents are under review by our admin team.</p>
                 <div class="badge badge-pending" style="margin-top: 15px;">Under Review</div>
             </div>
             <p style="margin-top: 20px; color: var(--light-gray);">
-                You will gain full access once your KYC is approved.
+                You will gain full access once your KYC is approved. This usually takes 24-48 hours.
             </p>
             <button class="btn btn-outline" style="margin-top: 20px;" onclick="logout()">Logout</button>
         </div>
     </div>
 
     <!-- User Dashboard -->
-    <div id="user-dashboard" class="page dashboard" style="display: none;">
+    <div id="user-dashboard" class="page dashboard">
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <div id="user-avatar" style="width: 45px; height: 45px; border-radius: 50%; background: var(--primary-red); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">U</div>
+                <div id="user-avatar" class="glassmorphism" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">U</div>
                 <div>
                     <div id="user-display-name" style="font-weight: bold;">User</div>
                     <div style="font-size: 0.8rem; color: var(--light-gray);">
@@ -489,47 +952,202 @@
                     </div>
                 </div>
             </div>
-            <button class="btn btn-outline" onclick="logout()">Logout</button>
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-outline" style="padding: 8px 12px;" onclick="toggleNotifications()">
+                    <i class="fas fa-bell"></i>
+                </button>
+                <button class="btn btn-outline" style="padding: 8px 12px;" onclick="toggleChat()">
+                    <i class="fas fa-comment"></i>
+                </button>
+                <button class="btn btn-outline" onclick="logout()">Logout</button>
+            </div>
         </div>
 
-        <div class="dashboard-content">
+        <div class="dashboard-content" id="dashboard-home">
+            <!-- Wallet Summary -->
             <div class="wallet-card">
                 <h3>💰 Your YSM Wallet</h3>
                 <div class="wallet-balance" id="user-balance">$0.00</div>
-                <p>Available for withdrawal • Minimum: $5</p>
-                <button class="btn btn-primary" style="width: 100%; margin-top: 20px; padding: 15px;" onclick="showWithdrawModal()">
+                <div style="display: flex; justify-content: space-between; margin: 15px 0;">
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--light-gray);">Pending</div>
+                        <div style="font-weight: bold;" id="user-pending">$0.00</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 0.9rem; color: var(--light-gray);">Referral Earnings</div>
+                        <div style="font-weight: bold;" id="user-referral">$0.00</div>
+                    </div>
+                </div>
+                
+                <!-- Daily Progress -->
+                <div style="margin: 20px 0;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span>Daily Progress</span>
+                        <span id="daily-progress-text">0/0</span>
+                    </div>
+                    <div class="progress-container">
+                        <div class="progress-bar" id="daily-progress-bar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <button class="btn btn-primary btn-3d" style="width: 100%; margin-top: 20px; padding: 15px;" onclick="showWithdrawModal()">
                     Request Withdrawal
                 </button>
             </div>
 
-            <div style="padding: 20px;">
-                <h3 style="margin-bottom: 20px;">🎬 Available Subscriptions</h3>
-                <div style="background: linear-gradient(135deg, var(--medium-gray) 0%, var(--dark-gray) 100%); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
+            <!-- Referral Panel -->
+            <div class="wallet-card">
+                <h3>👥 Referral Program</h3>
+                <div class="form-group">
+                    <label>Your Referral Link</label>
+                    <div style="display: flex; gap: 10px;">
+                        <input type="text" class="form-control" id="referral-link" readonly>
+                        <button class="btn btn-primary" onclick="copyReferralLink()">Copy</button>
+                    </div>
+                </div>
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-top: 15px;">
+                    <div class="glassmorphism" style="padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="referral-count">0</div>
+                        <div style="font-size: 0.9rem;">Total Referrals</div>
+                    </div>
+                    <div class="glassmorphism" style="padding: 15px; border-radius: 10px; text-align: center;">
+                        <div style="font-size: 1.5rem; font-weight: bold;" id="referral-earnings">$0</div>
+                        <div style="font-size: 0.9rem;">Total Earnings</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Notifications -->
+            <div class="wallet-card" id="notifications-panel" style="display: none;">
+                <h3>📢 Notifications</h3>
+                <div id="notifications-list">
+                    <div class="user-item">
                         <div>
-                            <div style="font-weight: bold; font-size: 1.1rem;">Tech Review Channel</div>
-                            <div style="color: var(--light-gray); font-size: 0.9rem;">Earn $2.56 per subscription</div>
+                            <div style="font-weight: bold;">Welcome to YSM!</div>
+                            <div style="font-size: 0.9rem; color: var(--light-gray);">
+                                Start earning by completing tasks below
+                            </div>
                         </div>
-                        <button class="btn btn-primary" onclick="completeSubscription()">
-                            Subscribe & Earn
-                        </button>
+                        <div style="font-size: 0.8rem; color: var(--light-gray);">Just now</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tasks Section -->
+            <div style="padding: 20px;">
+                <h3 style="margin-bottom: 20px;">🎬 Available Tasks</h3>
+                <div id="tasks-container">
+                    <!-- Tasks will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Tasks Page -->
+        <div class="dashboard-content" id="dashboard-tasks" style="display: none;">
+            <div style="padding: 20px;">
+                <h3 style="margin-bottom: 20px;">📋 Your Tasks</h3>
+                <div id="tasks-page-container">
+                    <!-- Tasks will be loaded here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Wallet Page -->
+        <div class="dashboard-content" id="dashboard-wallet" style="display: none;">
+            <div style="padding: 20px;">
+                <h3 style="margin-bottom: 20px;">💳 Wallet & Withdrawals</h3>
+                
+                <!-- Payment Method Binding -->
+                <div class="wallet-card">
+                    <h4>🔗 Bind Payment Method</h4>
+                    <div class="payment-methods">
+                        <div class="payment-method" onclick="selectPaymentMethod('paypal')">
+                            <i class="fab fa-paypal" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>PayPal</div>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod('binance')">
+                            <i class="fas fa-wallet" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>Binance</div>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod('mpesa')">
+                            <i class="fas fa-mobile-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>M-Pesa</div>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod('airtel')">
+                            <i class="fas fa-sim-card" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <div>Airtel Money</div>
+                        </div>
+                    </div>
+                    <div id="payment-details" style="margin-top: 20px; display: none;">
+                        <div class="form-group">
+                            <input type="text" class="form-control" id="payment-account" placeholder="Enter account details">
+                        </div>
+                        <button class="btn btn-primary" onclick="savePaymentMethod()">Save Payment Method</button>
+                    </div>
+                </div>
+
+                <!-- Withdrawal History -->
+                <div class="wallet-card">
+                    <h4>Withdrawal History</h4>
+                    <div id="withdrawal-history">
+                        <p style="text-align: center; padding: 20px; color: var(--light-gray);">No withdrawal history yet</p>
                     </div>
                 </div>
             </div>
         </div>
 
+        <!-- Profile Page -->
+        <div class="dashboard-content" id="dashboard-profile" style="display: none;">
+            <div style="padding: 20px;">
+                <h3 style="margin-bottom: 20px;">👤 Your Profile</h3>
+                <div class="wallet-card">
+                    <div class="form-group">
+                        <label>Full Name</label>
+                        <input type="text" class="form-control" id="profile-name" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Email</label>
+                        <input type="email" class="form-control" id="profile-email" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Phone</label>
+                        <input type="tel" class="form-control" id="profile-phone" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Country</label>
+                        <input type="text" class="form-control" id="profile-country" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Tier</label>
+                        <input type="text" class="form-control" id="profile-tier" readonly>
+                    </div>
+                    <div class="form-group">
+                        <label>Join Date</label>
+                        <input type="text" class="form-control" id="profile-join-date" readonly>
+                    </div>
+                    <button class="btn btn-outline" style="width: 100%; margin-top: 15px;" onclick="showChangePINModal()">
+                        Change Withdrawal PIN
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <div class="bottom-nav">
-            <a href="#" class="nav-item active">
+            <a href="#" class="nav-item active" onclick="showDashboardSection('home')">
                 <i class="fas fa-home"></i>
                 <span>Home</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" onclick="showDashboardSection('tasks')">
                 <i class="fas fa-tasks"></i>
                 <span>Tasks</span>
             </a>
-            <a href="#" class="nav-item">
+            <a href="#" class="nav-item" onclick="showDashboardSection('wallet')">
                 <i class="fas fa-wallet"></i>
                 <span>Wallet</span>
+            </a>
+            <a href="#" class="nav-item" onclick="showDashboardSection('profile')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
             </a>
         </div>
     </div>
@@ -543,20 +1161,17 @@
         <div class="form-group">
             <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" value="admin123" required>
         </div>
-        <div class="form-group">
-            <input type="text" class="form-control" id="admin-2fa" placeholder="Security Code" value="123456" required>
-        </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="loginAdmin()">Access Admin Panel</button>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="loginAdmin()">Access Admin Panel</button>
         <p style="text-align: center; margin-top: 20px;">
             <a href="#" style="color: var(--primary-red);" onclick="showPage('landing-page')">← Back to Home</a>
         </p>
     </div>
 
     <!-- Admin Dashboard -->
-    <div id="admin-dashboard" class="page dashboard" style="display: none;">
+    <div id="admin-dashboard" class="page dashboard">
         <div class="top-bar">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <div style="width: 45px; height: 45px; border-radius: 50%; background: var(--warning); display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">A</div>
+                <div class="glassmorphism" style="width: 45px; height: 45px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1.1rem;">A</div>
                 <div>
                     <div style="font-weight: bold;">YSM Admin Panel</div>
                     <div style="font-size: 0.8rem; color: var(--light-gray);">Full System Access</div>
@@ -568,26 +1183,41 @@
         <div class="admin-panel">
             <h2 style="margin-bottom: 30px;">👑 Admin Dashboard</h2>
             
-            <div class="admin-grid">
+            <!-- Admin Navigation -->
+            <div class="admin-nav">
+                <button class="btn btn-primary" onclick="loadAdminStats()">Dashboard</button>
+                <button class="btn btn-primary" onclick="loadKYCManagement()">KYC Management</button>
+                <button class="btn btn-primary" onclick="loadUserManagement()">User Management</button>
+                <button class="btn btn-primary" onclick="loadAdsManagement()">Ads Management</button>
+                <button class="btn btn-primary" onclick="loadWithdrawalManagement()">Withdrawals</button>
+                <button class="btn btn-primary" onclick="loadTierManagement()">Tier Settings</button>
+            </div>
+            
+            <!-- Dashboard Stats -->
+            <div id="admin-stats" class="admin-grid">
                 <div class="admin-card">
                     <h3 style="color: var(--primary-red); margin-bottom: 15px;">📊 Platform Stats</h3>
                     <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="total-users">0</div>
                     <div>Total Users</div>
                     <div style="margin-top: 15px; font-size: 1.5rem; font-weight: bold; color: var(--warning);" id="pending-kyc">0</div>
                     <div>Pending KYC</div>
+                    <div style="margin-top: 15px; font-size: 1.5rem; font-weight: bold; color: var(--primary-red);" id="pending-withdrawals">0</div>
+                    <div>Pending Withdrawals</div>
                 </div>
                 
                 <div class="admin-card">
-                    <h3 style="color: var(--primary-red); margin-bottom: 15px;">⚡ Quick Actions</h3>
-                    <button class="btn btn-primary" style="width: 100%; margin-bottom: 10px;" onclick="loadKYCManagement()">
-                        Manage KYC Requests
-                    </button>
-                    <button class="btn btn-success" style="width: 100%; margin-bottom: 10px;" onclick="loadUserManagement()">
-                        User Management
-                    </button>
-                    <button class="btn btn-warning" style="width: 100%;" onclick="loadWithdrawalManagement()">
-                        Withdrawal Management
-                    </button>
+                    <h3 style="color: var(--primary-red); margin-bottom: 15px;">💰 Financial Overview</h3>
+                    <div style="font-size: 2rem; font-weight: bold; color: var(--success);" id="total-earnings">$0</div>
+                    <div>Total Platform Earnings</div>
+                    <div style="margin-top: 15px; font-size: 1.5rem; font-weight: bold; color: var(--warning);" id="total-withdrawals">$0</div>
+                    <div>Total Withdrawals</div>
+                </div>
+
+                <div class="admin-card">
+                    <h3 style="color: var(--primary-red); margin-bottom: 15px;">📈 Activity Graph</h3>
+                    <div style="height: 200px; background: var(--black); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--light-gray);">
+                        Ads Watched / Hour Graph
+                    </div>
                 </div>
             </div>
 
@@ -605,10 +1235,30 @@
             <!-- User Management -->
             <div id="user-management" class="admin-card" style="margin-top: 20px; display: none;">
                 <h3 style="color: var(--primary-red); margin-bottom: 20px;">👥 User Management</h3>
+                <div style="margin-bottom: 20px;">
+                    <input type="text" class="form-control" id="user-search" placeholder="Search users...">
+                </div>
                 <div id="user-list">
                     <div style="text-align: center; padding: 40px; color: var(--light-gray);">
                         <div class="spinner"></div>
                         <p>Loading users...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ads Management -->
+            <div id="ads-management" class="admin-card" style="margin-top: 20px; display: none;">
+                <h3 style="color: var(--primary-red); margin-bottom: 20px;">📺 Ads Management</h3>
+                <div class="form-group">
+                    <label>Bulk Add YouTube Links (one per line)</label>
+                    <textarea class="form-control" id="bulk-youtube-links" placeholder="Paste YouTube links here" rows="5"></textarea>
+                </div>
+                <button class="btn btn-primary" onclick="bulkAddVideos()">Add Videos as Tasks</button>
+                
+                <div style="margin-top: 30px;">
+                    <h4>Current Active Tasks</h4>
+                    <div id="ads-list">
+                        <!-- Ads will be listed here -->
                     </div>
                 </div>
             </div>
@@ -621,6 +1271,30 @@
                         <div class="spinner"></div>
                         <p>Loading withdrawals...</p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Tier Management -->
+            <div id="tier-management" class="admin-card" style="margin-top: 20px; display: none;">
+                <h3 style="color: var(--primary-red); margin-bottom: 20px;">📊 Tier Management</h3>
+                <div class="tier-table-container" style="overflow-x: auto;">
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Ads/Day</th>
+                                <th>Pay/Ad</th>
+                                <th>Daily</th>
+                                <th>Monthly</th>
+                                <th>6-Month</th>
+                                <th>1-Year</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tier-list">
+                            <!-- Tiers will be loaded here -->
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>
@@ -644,15 +1318,17 @@
             </select>
         </div>
         <div class="form-group">
-            <label>Enter Your 4-Digit PIN</label>
+            <label>Enter Your 6-Digit PIN</label>
             <div class="pin-container">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 1)">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 2)">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 3)">
                 <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 4)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 5)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 6)">
             </div>
         </div>
-        <button class="btn btn-primary" style="width: 100%;" onclick="submitWithdrawal()">
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="submitWithdrawal()">
             Submit Withdrawal
         </button>
         <p style="text-align: center; margin-top: 20px;">
@@ -662,13 +1338,66 @@
         </p>
     </div>
 
+    <!-- Change PIN Modal -->
+    <div id="change-pin-modal" class="page form-container" style="display: none;">
+        <h2 class="form-title">Change Withdrawal PIN</h2>
+        <div class="form-group">
+            <label>Current PIN</label>
+            <div class="pin-container">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 1)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 2)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 3)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 4)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 5)">
+                <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 6)">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>New PIN</label>
+            <div class="pin-container">
+                <input type="password" class="pin-input new-pin" maxlength="1" oninput="moveToNext(this, 1)">
+                <input type="password" class="pin-input new-pin" maxlength="1" oninput="moveToNext(this, 2)">
+                <input type="password" class="pin-input new-pin" maxlength="1" oninput="moveToNext(this, 3)">
+                <input type="password" class="pin-input new-pin" maxlength="1" oninput="moveToNext(this, 4)">
+                <input type="password" class="pin-input new-pin" maxlength="1" oninput="moveToNext(this, 5)">
+                <input type="password" class="pin-input new-pin" maxlength="1" oninput="moveToNext(this, 6)">
+            </div>
+        </div>
+        <button class="btn btn-primary btn-3d" style="width: 100%;" onclick="changePIN()">
+            Change PIN
+        </button>
+        <p style="text-align: center; margin-top: 20px;">
+            <a href="#" style="color: var(--primary-red);" onclick="closeChangePINModal()">
+                ← Cancel
+            </a>
+        </p>
+    </div>
+
+    <!-- Chat Modal -->
+    <div id="chat-modal" class="page form-container" style="display: none; max-width: 400px; height: 500px; display: flex; flex-direction: column;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 class="form-title" style="margin: 0;">💬 Support Chat</h2>
+            <button class="btn btn-outline" style="padding: 5px 10px;" onclick="closeChat()">✕</button>
+        </div>
+        <div id="chat-messages" style="flex: 1; overflow-y: auto; margin-bottom: 15px; padding: 10px; background: var(--black); border-radius: 10px;">
+            <div style="text-align: center; padding: 20px; color: var(--light-gray);">
+                Start a conversation with our support team
+            </div>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <input type="text" class="form-control" id="chat-input" placeholder="Type your message...">
+            <button class="btn btn-primary" onclick="sendChatMessage()">Send</button>
+        </div>
+    </div>
+
     <script>
-        // Firebase Config
+        // ==================== FIREBASE CONFIGURATION ====================
+        // Replace these with your actual Firebase config from Firebase Console
         const firebaseConfig = {
             apiKey: "AIzaSyDOKJQayF5j5xCp6LVZEEFFJH0QiQtezgg",
-            authDomain: "sm-platform-6ef20.firebaseapp.com",
-            projectId: "sm-platform-6ef20", 
-            storageBucket: "sm-platform-6ef20.firebasestorage.app",
+            authDomain: "ysm-platform-6ef20.firebaseapp.com",
+            projectId: "ysm-platform-6ef20",
+            storageBucket: "ysm-platform-6ef20.firebasestorage.app",
             messagingSenderId: "485407332553",
             appId: "1:485407332553:web:77bd1bf2b3146486e51518"
         };
@@ -677,24 +1406,82 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
         const auth = firebase.auth();
+        const storage = firebase.storage();
 
+        // ==================== APPLICATION STATE ====================
         let currentUser = null;
         let userId = null;
+        let userData = {
+            users: [],
+            kycSubmissions: [],
+            tasks: [],
+            withdrawals: []
+        };
 
-        // File upload handlers
-        document.getElementById('kyc-front').addEventListener('change', function(e) {
-            document.getElementById('front-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
+        // Tier system configuration
+        const tierSystem = {
+            "115.38": { adsPerDay: 8, payPerAd: 0.48, daily: 3.85, monthly: 115.38, sixMonth: 692.31, oneYear: 1384.62 },
+            "192.31": { adsPerDay: 10, payPerAd: 0.64, daily: 6.41, monthly: 192.31, sixMonth: 1153.85, oneYear: 2307.69 },
+            "269.23": { adsPerDay: 12, payPerAd: 0.75, daily: 8.97, monthly: 269.23, sixMonth: 1615.38, oneYear: 3230.77 },
+            "307.69": { adsPerDay: 13, payPerAd: 0.79, daily: 10.26, monthly: 307.69, sixMonth: 1846.15, oneYear: 3692.31 },
+            "461.54": { adsPerDay: 15, payPerAd: 1.03, daily: 15.38, monthly: 461.54, sixMonth: 2769.23, oneYear: 5538.46 },
+            "615.38": { adsPerDay: 17, payPerAd: 1.21, daily: 20.51, monthly: 615.38, sixMonth: 3692.31, oneYear: 7384.62 },
+            "769.23": { adsPerDay: 18, payPerAd: 1.43, daily: 25.64, monthly: 769.23, sixMonth: 4615.38, oneYear: 9230.77 },
+            "923.08": { adsPerDay: 20, payPerAd: 1.54, daily: 30.77, monthly: 923.08, sixMonth: 5538.46, oneYear: 11076.92 },
+            "1692.31": { adsPerDay: 25, payPerAd: 2.26, daily: 56.41, monthly: 1692.31, sixMonth: 10153.85, oneYear: 20307.69 },
+            "2461.54": { adsPerDay: 30, payPerAd: 2.74, daily: 82.05, monthly: 2461.54, sixMonth: 14769.23, oneYear: 29538.46 },
+            "3230.77": { adsPerDay: 35, payPerAd: 3.08, daily: 107.69, monthly: 3230.77, sixMonth: 19384.62, oneYear: 38769.23 },
+            "4000.00": { adsPerDay: 40, payPerAd: 3.33, daily: 133.33, monthly: 4000.00, sixMonth: 24000.00, oneYear: 48000.00 },
+            "4615.38": { adsPerDay: 45, payPerAd: 3.42, daily: 153.85, monthly: 4615.38, sixMonth: 27692.31, oneYear: 55384.62 }
+        };
+
+        // YouTube video links
+        const youtubeLinks = [
+            "https://youtu.be/Il9lcAzynWw", "https://youtu.be/bVqhNPYYUno", "https://youtu.be/DWEkzYRE2nk",
+            "https://youtu.be/1kAI6TKpiqI", "https://youtu.be/H2RhIdf0MXo", "https://youtu.be/qe5dJCRWifo",
+            "https://youtu.be/MTtiyKc8f2g", "https://youtu.be/l3RyWY_PXTw", "https://youtu.be/kOcEK5TGXV8",
+            "https://youtu.be/zOqdQUOTjV0", "https://youtu.be/ajsZ3rrLxjs", "https://youtu.be/D3RO2xNKS6s",
+            "https://youtu.be/iLwsPnywFc0", "https://youtu.be/eFJ4_QEfu64", "https://youtu.be/MTtiyKc8f2g",
+            "https://youtu.be/ds9PWKjmUlE", "https://youtu.be/Brrmj9z7QLw", "https://youtu.be/Dz4yad8kz9g",
+            "https://youtu.be/BZi6G6oinlk", "https://youtu.be/w2yFwbYITMg", "https://youtu.be/rXuXyGHMAog",
+            "https://youtu.be/CDjOdTeyNPI", "https://youtu.be/eOMhOjgNd7Q", "https://youtu.be/UnEQvsOa-3g",
+            "https://youtu.be/0Ab-F7Y3IXc", "https://youtu.be/2l8dNRfZit0", "https://youtu.be/OeFxd7xKFXk",
+            "https://youtu.be/WRX8VGvllEY", "https://youtu.be/xAuK1iDL44A", "https://youtu.be/jSWGA1YITFA",
+            "https://youtu.be/CEL6Uldh4lc", "https://youtu.be/4vLOvPBczwc"
+        ];
+
+        // ==================== FIREBASE AUTH LISTENER ====================
+        auth.onAuthStateChanged(async (user) => {
+            if (user) {
+                userId = user.uid;
+                try {
+                    const userDoc = await db.collection('users').doc(userId).get();
+                    if (userDoc.exists) {
+                        currentUser = userDoc.data();
+                        currentUser.id = userId;
+                        updateUserUI();
+                        
+                        if (currentUser.kycStatus === 'approved') {
+                            showPage('user-dashboard');
+                        } else if (currentUser.kycStatus === 'pending') {
+                            showPage('kyc-pending-page');
+                        } else {
+                            showPage('kyc-page');
+                            document.getElementById('kyc-name').value = currentUser.name;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error loading user data:', error);
+                    showError('Error loading user data');
+                }
+            } else {
+                currentUser = null;
+                userId = null;
+                showPage('landing-page');
+            }
         });
 
-        document.getElementById('kyc-back').addEventListener('change', function(e) {
-            document.getElementById('back-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
-        });
-
-        document.getElementById('kyc-selfie').addEventListener('change', function(e) {
-            document.getElementById('selfie-file-name').textContent = e.target.files[0]?.name || 'No file chosen';
-        });
-
-        // UI Functions
+        // ==================== UI FUNCTIONS ====================
         function showLoading() {
             document.getElementById('loading').style.display = 'block';
         }
@@ -708,6 +1495,12 @@
                 page.style.display = 'none';
             });
             document.getElementById(pageId).style.display = 'block';
+            
+            if (pageId === 'user-dashboard' && currentUser) {
+                loadUserDashboard();
+            } else if (pageId === 'admin-dashboard') {
+                loadAdminStats();
+            }
         }
 
         function showError(message) {
@@ -718,13 +1511,15 @@
             alert('✅ ' + message);
         }
 
-        // Auth Functions
+        // ==================== AUTHENTICATION FUNCTIONS ====================
         async function registerUser() {
             const name = document.getElementById('reg-name').value;
             const email = document.getElementById('reg-email').value;
+            const phone = document.getElementById('reg-phone').value;
+            const country = document.getElementById('reg-country').value;
             const password = document.getElementById('reg-password').value;
 
-            if (!name || !email || !password) {
+            if (!name || !email || !phone || !country || !password) {
                 showError('Please fill all fields');
                 return;
             }
@@ -737,18 +1532,26 @@
                 await db.collection('users').doc(user.uid).set({
                     name: name,
                     email: email,
+                    phone: phone,
+                    country: country,
                     balance: 0,
-                    tier: 'basic',
-                    kycStatus: 'pending',
+                    pendingBalance: 0,
+                    referralEarnings: 0,
+                    tier: '115.38',
+                    tierData: tierSystem["115.38"],
+                    kycStatus: 'none',
                     withdrawalPin: generatePIN(),
+                    dailyWatchCount: 0,
                     canEarn: false,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    referralCode: generateReferralCode(),
+                    totalReferrals: 0,
+                    joinDate: firebase.firestore.FieldValue.serverTimestamp(),
+                    totalWithdrawn: 0,
+                    paymentMethods: {}
                 });
 
-                showSuccess('Registration successful! Please complete KYC verification.');
-                showPage('kyc-page');
-                document.getElementById('kyc-name').value = name;
-                
+                showSuccess('Registration successful! Please verify your account.');
+                showPage('otp-verification-page');
             } catch (error) {
                 showError(error.message);
             }
@@ -761,40 +1564,26 @@
 
             showLoading();
             try {
-                const userCredential = await auth.signInWithEmailAndPassword(email, password);
-                const user = userCredential.user;
-                
-                const userDoc = await db.collection('users').doc(user.uid).get();
-                if (userDoc.exists) {
-                    currentUser = userDoc.data();
-                    userId = user.uid;
-                    
-                    updateUserUI();
-                    
-                    if (currentUser.kycStatus === 'approved') {
-                        showPage('user-dashboard');
-                    } else if (currentUser.kycStatus === 'pending') {
-                        showPage('kyc-pending-page');
-                    } else {
-                        showPage('kyc-page');
-                        document.getElementById('kyc-name').value = currentUser.name;
-                    }
-                }
-                
+                await auth.signInWithEmailAndPassword(email, password);
+                // Auth state listener will handle the rest
             } catch (error) {
                 showError(error.message);
             }
             hideLoading();
         }
 
-        function logout() {
-            auth.signOut();
-            currentUser = null;
-            userId = null;
-            showPage('landing-page');
+        async function logout() {
+            try {
+                await auth.signOut();
+                currentUser = null;
+                userId = null;
+                showPage('landing-page');
+            } catch (error) {
+                console.error('Error signing out:', error);
+            }
         }
 
-        // KYC Functions - ALL FILES REQUIRED
+        // ==================== KYC FUNCTIONS ====================
         async function submitKYC() {
             const name = document.getElementById('kyc-name').value;
             const idType = document.getElementById('kyc-id-type').value;
@@ -802,74 +1591,112 @@
             const frontImage = document.getElementById('kyc-front').files[0];
             const backImage = document.getElementById('kyc-back').files[0];
             const selfieImage = document.getElementById('kyc-selfie').files[0];
+            const addressImage = document.getElementById('kyc-address').files[0];
 
-            if (!name || !idType || !idNumber || !frontImage || !backImage || !selfieImage) {
+            if (!name || !idType || !idNumber || !frontImage || !backImage || !selfieImage || !addressImage) {
                 showError('All fields and file uploads are REQUIRED for KYC verification');
                 return;
             }
 
             showLoading();
             try {
-                // Store KYC data (in real app, you'd upload files to storage)
+                // Upload files to Firebase Storage
+                const frontUrl = await uploadFile(frontImage, `kyc/${userId}/front`);
+                const backUrl = await uploadFile(backImage, `kyc/${userId}/back`);
+                const selfieUrl = await uploadFile(selfieImage, `kyc/${userId}/selfie`);
+                const addressUrl = await uploadFile(addressImage, `kyc/${userId}/address`);
+
+                // Create KYC submission
                 await db.collection('kycSubmissions').doc(userId).set({
+                    userId: userId,
                     name: name,
                     idType: idType,
                     idNumber: idNumber,
-                    filesUploaded: true, // Mark that files were uploaded
+                    frontImage: frontUrl,
+                    backImage: backUrl,
+                    selfieImage: selfieUrl,
+                    addressImage: addressUrl,
                     status: 'pending',
-                    submittedAt: firebase.firestore.FieldValue.serverTimestamp(),
-                    userId: userId
+                    submittedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
+                // Update user KYC status
                 await db.collection('users').doc(userId).update({
                     kycStatus: 'pending'
                 });
 
                 currentUser.kycStatus = 'pending';
-                showSuccess('KYC submitted! All documents received. Waiting for admin approval.');
+                showSuccess('KYC submitted successfully! Your documents are under review.');
                 showPage('kyc-pending-page');
                 updateUserUI();
-                
             } catch (error) {
-                showError(error.message);
+                showError('Error submitting KYC: ' + error.message);
             }
             hideLoading();
         }
 
-        // Admin Functions - FULLY WORKING
-        async function loginAdmin() {
+        async function uploadFile(file, path) {
+            const storageRef = storage.ref().child(path);
+            await storageRef.put(file);
+            return await storageRef.getDownloadURL();
+        }
+
+        // ==================== ADMIN FUNCTIONS ====================
+        function loginAdmin() {
             const username = document.getElementById('admin-username').value;
             const password = document.getElementById('admin-password').value;
-            const twoFA = document.getElementById('admin-2fa').value;
 
-            if (username === 'admin' && password === 'admin123' && twoFA === '123456') {
-                showLoading();
-                try {
-                    // Load admin data
-                    await loadAdminStats();
-                    showPage('admin-dashboard');
-                    showSuccess('Admin login successful!');
-                } catch (error) {
-                    showError('Admin login error: ' + error.message);
-                }
-                hideLoading();
+            if (username === 'admin' && password === 'admin123') {
+                // For admin, we'll use a special admin user in Firebase
+                auth.signInWithEmailAndPassword('admin@ysm.com', 'admin123')
+                    .then(() => {
+                        showPage('admin-dashboard');
+                        showSuccess('Admin login successful!');
+                    })
+                    .catch(() => {
+                        showError('Admin authentication failed');
+                    });
             } else {
                 showError('Invalid admin credentials');
             }
         }
 
         async function loadAdminStats() {
-            // Get total users
-            const usersSnapshot = await db.collection('users').get();
-            document.getElementById('total-users').textContent = usersSnapshot.size;
-
-            // Get pending KYC
-            const kycSnapshot = await db.collection('kycSubmissions').where('status', '==', 'pending').get();
-            document.getElementById('pending-kyc').textContent = kycSnapshot.size;
+            showAdminSection('admin-stats');
+            
+            try {
+                const usersSnapshot = await db.collection('users').get();
+                document.getElementById('total-users').textContent = usersSnapshot.size;
+                
+                const kycSnapshot = await db.collection('kycSubmissions').where('status', '==', 'pending').get();
+                document.getElementById('pending-kyc').textContent = kycSnapshot.size;
+                
+                const withdrawalsSnapshot = await db.collection('withdrawals').where('status', '==', 'pending').get();
+                document.getElementById('pending-withdrawals').textContent = withdrawalsSnapshot.size;
+                
+                // Calculate totals
+                let totalEarnings = 0;
+                let totalWithdrawals = 0;
+                
+                usersSnapshot.forEach(doc => {
+                    const user = doc.data();
+                    totalEarnings += user.balance + (user.totalWithdrawn || 0);
+                });
+                
+                const approvedWithdrawals = await db.collection('withdrawals').where('status', '==', 'approved').get();
+                approvedWithdrawals.forEach(doc => {
+                    totalWithdrawals += doc.data().amount;
+                });
+                
+                document.getElementById('total-earnings').textContent = '$' + totalEarnings.toFixed(2);
+                document.getElementById('total-withdrawals').textContent = '$' + totalWithdrawals.toFixed(2);
+            } catch (error) {
+                console.error('Error loading admin stats:', error);
+            }
         }
 
         async function loadKYCManagement() {
-            showSection('kyc-management');
+            showAdminSection('kyc-management');
             const kycList = document.getElementById('kyc-list');
             
             try {
@@ -881,14 +1708,17 @@
                 }
 
                 let html = '';
-                snapshot.forEach(doc => {
+                for (const doc of snapshot.docs) {
                     const kyc = doc.data();
+                    const userDoc = await db.collection('users').doc(kyc.userId).get();
+                    const user = userDoc.data();
+                    
                     html += `
                         <div class="user-item">
                             <div>
                                 <div style="font-weight: bold;">${kyc.name}</div>
                                 <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                    ${kyc.idType} • ${kyc.idNumber}
+                                    ${user.email} • ${kyc.idType} • ${kyc.idNumber}
                                 </div>
                                 <div style="font-size: 0.8rem; color: var(--warning);">
                                     Submitted: ${new Date(kyc.submittedAt?.toDate()).toLocaleDateString()}
@@ -900,7 +1730,7 @@
                             </div>
                         </div>
                     `;
-                });
+                }
                 
                 kycList.innerHTML = html;
             } catch (error) {
@@ -908,63 +1738,14 @@
             }
         }
 
-        async function loadUserManagement() {
-            showSection('user-management');
-            const userList = document.getElementById('user-list');
-            
-            try {
-                const snapshot = await db.collection('users').get();
-                
-                let html = '';
-                snapshot.forEach(doc => {
-                    const user = doc.data();
-                    html += `
-                        <div class="user-item">
-                            <div>
-                                <div style="font-weight: bold;">${user.name}</div>
-                                <div style="font-size: 0.9rem; color: var(--light-gray);">
-                                    ${user.email} • ${user.tier} Tier
-                                </div>
-                                <div class="badge badge-${user.kycStatus}">${user.kycStatus}</div>
-                            </div>
-                            <div class="balance-control">
-                                <input type="number" class="balance-input" value="${user.balance}" id="balance-${doc.id}">
-                                <button class="btn btn-success" onclick="updateUserBalance('${doc.id}')">Update</button>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                userList.innerHTML = html;
-            } catch (error) {
-                userList.innerHTML = `<p style="color: var(--primary-red); text-align: center;">Error loading users: ${error.message}</p>`;
-            }
-        }
-
-        async function loadWithdrawalManagement() {
-            showSection('withdrawal-management');
-            const withdrawalList = document.getElementById('withdrawal-list');
-            withdrawalList.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">Withdrawal management loaded</p>';
-        }
-
-        function showSection(sectionId) {
-            document.getElementById('kyc-management').style.display = 'none';
-            document.getElementById('user-management').style.display = 'none';
-            document.getElementById('withdrawal-management').style.display = 'none';
-            document.getElementById(sectionId).style.display = 'block';
-        }
-
         async function approveKYC(kycId) {
             try {
-                const kycDoc = await db.collection('kycSubmissions').doc(kycId).get();
-                const kycData = kycDoc.data();
-                
                 await db.collection('kycSubmissions').doc(kycId).update({
                     status: 'approved',
                     processedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                await db.collection('users').doc(kycData.userId).update({
+                await db.collection('users').doc(kycId).update({
                     kycStatus: 'approved',
                     canEarn: true
                 });
@@ -979,15 +1760,12 @@
 
         async function rejectKYC(kycId) {
             try {
-                const kycDoc = await db.collection('kycSubmissions').doc(kycId).get();
-                const kycData = kycDoc.data();
-                
                 await db.collection('kycSubmissions').doc(kycId).update({
                     status: 'rejected',
                     processedAt: firebase.firestore.FieldValue.serverTimestamp()
                 });
 
-                await db.collection('users').doc(kycData.userId).update({
+                await db.collection('users').doc(kycId).update({
                     kycStatus: 'rejected',
                     canEarn: false
                 });
@@ -1000,127 +1778,78 @@
             }
         }
 
-        async function updateUserBalance(userId) {
-            const newBalance = parseFloat(document.getElementById(`balance-${userId}`).value);
-            try {
-                await db.collection('users').doc(userId).update({
-                    balance: newBalance
-                });
-                showSuccess('Balance updated successfully!');
-            } catch (error) {
-                showError('Error updating balance: ' + error.message);
-            }
-        }
-
-        // Withdrawal Functions
-        function showWithdrawModal() {
-            if (currentUser.kycStatus !== 'approved') {
-                showError('Please complete KYC verification first!');
-                return;
-            }
-            document.getElementById('withdraw-modal').style.display = 'block';
-            document.getElementById('withdraw-amount').max = currentUser.balance;
-        }
-
-        function closeWithdrawModal() {
-            document.getElementById('withdraw-modal').style.display = 'none';
-            document.querySelectorAll('.pin-input').forEach(input => input.value = '');
-        }
-
-        function moveToNext(input, nextIndex) {
-            if (input.value.length === 1) {
-                const nextInput = document.querySelectorAll('.pin-input')[nextIndex];
-                if (nextInput) nextInput.focus();
-            }
-        }
-
-        async function submitWithdrawal() {
-            const amount = parseFloat(document.getElementById('withdraw-amount').value);
-            const method = document.getElementById('withdraw-method').value;
+        // ==================== USER DASHBOARD FUNCTIONS ====================
+        async function loadUserDashboard() {
+            if (!currentUser || currentUser.kycStatus !== 'approved') return;
             
-            if (amount < 5) {
-                showError('Minimum withdrawal amount is $5');
-                return;
-            }
-
-            if (amount > currentUser.balance) {
-                showError('Insufficient balance');
-                return;
-            }
-
-            const pinInputs = document.querySelectorAll('.pin-input');
-            const enteredPin = Array.from(pinInputs).map(input => input.value).join('');
-            
-            if (enteredPin !== currentUser.withdrawalPin) {
-                showError('Invalid PIN! Please try again.');
-                return;
-            }
-
-            showLoading();
-            try {
-                await db.collection('withdrawals').add({
-                    userId: userId,
-                    amount: amount,
-                    method: method,
-                    status: 'pending',
-                    requestedAt: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                const newBalance = currentUser.balance - amount;
-                await db.collection('users').doc(userId).update({
-                    balance: newBalance
-                });
-
-                currentUser.balance = newBalance;
-                updateUserUI();
-                
-                showSuccess('Withdrawal request submitted! $' + amount + ' will be processed within 24-72 hours.');
-                closeWithdrawModal();
-                
-            } catch (error) {
-                showError(error.message);
-            }
-            hideLoading();
+            updateUserUI();
+            await loadTasks();
+            updateDailyProgress();
         }
 
-        // Subscription Function
-        async function completeSubscription() {
-            if (currentUser.kycStatus !== 'approved') {
-                showError('Please complete KYC verification first!');
-                return;
-            }
+        async function loadTasks() {
+            const tasksContainer = document.getElementById('tasks-container');
+            const tasksPageContainer = document.getElementById('tasks-page-container');
             
-            showLoading();
             try {
-                const earnings = 2.56;
-                const newBalance = currentUser.balance + earnings;
+                const snapshot = await db.collection('tasks').where('active', '==', true).get();
+                const tasks = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
                 
-                await db.collection('users').doc(userId).update({
-                    balance: newBalance
+                if (tasks.length === 0) {
+                    tasksContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available at the moment. Check back later!</p>';
+                    tasksPageContainer.innerHTML = '<p style="text-align: center; padding: 40px; color: var(--light-gray);">No tasks available at the moment. Check back later!</p>';
+                    return;
+                }
+
+                let html = '';
+                tasks.forEach(task => {
+                    if (task.assignedTiers.includes(currentUser.tier)) {
+                        const embedUrl = `https://www.youtube.com/embed/${task.videoId}?rel=0&modestbranding=1&controls=1&showinfo=0`;
+                        
+                        html += `
+                            <div class="task-card">
+                                <div class="video-container">
+                                    <iframe src="${embedUrl}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+                                    <div class="task-timer" id="timer-${task.id}">10s</div>
+                                </div>
+                                <h4>${task.title}</h4>
+                                <p>Earn $${currentUser.tierData.payPerAd.toFixed(2)} per subscription (Tier: $${currentUser.tier})</p>
+                                <button class="subscribe-btn" id="btn-${task.id}" onclick="startTask('${task.id}')" disabled>
+                                    Start Watching to Enable
+                                </button>
+                            </div>
+                        `;
+                    }
                 });
                 
-                currentUser.balance = newBalance;
-                updateUserUI();
-                
-                showSuccess('Subscription completed! $' + earnings + ' added to your wallet.');
-                
+                tasksContainer.innerHTML = html;
+                tasksPageContainer.innerHTML = html;
             } catch (error) {
-                showError(error.message);
+                console.error('Error loading tasks:', error);
             }
-            hideLoading();
         }
 
-        // Utility Functions
+        // ==================== UTILITY FUNCTIONS ====================
         function generatePIN() {
-            return Math.floor(1000 + Math.random() * 9000).toString();
+            return Math.floor(100000 + Math.random() * 900000).toString();
+        }
+
+        function generateReferralCode() {
+            return Math.random().toString(36).substring(2, 8).toUpperCase();
         }
 
         function updateUserUI() {
             if (currentUser) {
                 document.getElementById('user-display-name').textContent = currentUser.name;
                 document.getElementById('user-avatar').textContent = currentUser.name.charAt(0).toUpperCase();
-                document.getElementById('user-balance').textContent = '$' + currentUser.balance.toFixed(2);
-                document.getElementById('user-tier-display').textContent = currentUser.tier.toUpperCase() + ' Tier';
+                document.getElementById('user-balance').textContent = '$' + (currentUser.balance || 0).toFixed(2);
+                document.getElementById('user-pending').textContent = '$' + (currentUser.pendingBalance || 0).toFixed(2);
+                document.getElementById('user-referral').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
+                document.getElementById('user-tier-display').textContent = '$' + currentUser.tier + ' Tier';
+                
+                document.getElementById('referral-link').value = `${window.location.origin}${window.location.pathname}?ref=${currentUser.referralCode}`;
+                document.getElementById('referral-count').textContent = currentUser.totalReferrals || 0;
+                document.getElementById('referral-earnings').textContent = '$' + (currentUser.referralEarnings || 0).toFixed(2);
                 
                 const kycBadge = document.getElementById('kyc-status');
                 kycBadge.textContent = currentUser.kycStatus;
@@ -1128,28 +1857,31 @@
             }
         }
 
-        // Auto-login
-        auth.onAuthStateChanged((user) => {
-            if (user) {
-                userId = user.uid;
-                db.collection('users').doc(userId).get().then((doc) => {
-                    if (doc.exists) {
-                        currentUser = doc.data();
-                        updateUserUI();
-                        if (currentUser.kycStatus === 'approved') {
-                            showPage('user-dashboard');
-                        } else if (currentUser.kycStatus === 'pending') {
-                            showPage('kyc-pending-page');
-                        } else {
-                            showPage('kyc-page');
-                            document.getElementById('kyc-name').value = currentUser.name;
-                        }
-                    }
-                });
+        function updateDailyProgress() {
+            const progressText = document.getElementById('daily-progress-text');
+            const progressBar = document.getElementById('daily-progress-bar');
+            
+            if (currentUser && currentUser.tierData) {
+                const progress = (currentUser.dailyWatchCount / currentUser.tierData.adsPerDay) * 100;
+                progressText.textContent = `${currentUser.dailyWatchCount}/${currentUser.tierData.adsPerDay}`;
+                progressBar.style.width = `${progress}%`;
             }
-        });
+        }
 
-        console.log('🚀 YSM Platform - Complete Version Loaded!');
+        function showAdminSection(sectionId) {
+            document.getElementById('admin-stats').style.display = 'none';
+            document.getElementById('kyc-management').style.display = 'none';
+            document.getElementById('user-management').style.display = 'none';
+            document.getElementById('ads-management').style.display = 'none';
+            document.getElementById('withdrawal-management').style.display = 'none';
+            document.getElementById('tier-management').style.display = 'none';
+            document.getElementById(sectionId).style.display = 'block';
+        }
+
+        // Initialize the application
+        console.log('🚀 YSM Platform - Firebase Version Loaded!');
+        console.log('📹 YouTube video system ready');
+        console.log('👑 Admin access: admin@ysm.com / admin123');
     </script>
 </body>
 </html>
