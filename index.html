@@ -1,507 +1,1818 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <title>YSM - YouTube Subs Monetization (Final)</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <style>
-    :root { --red:#FF0000; --bg-dark-1:#000000; --bg-dark-2:#111111; --muted:#9aa0a6; --card: rgba(255,255,255,0.03); color-scheme: dark; }
-    html,body{height:100%;margin:0;font-family:Inter,Segoe UI,system-ui,Arial;background:linear-gradient(180deg,var(--bg-dark-1),var(--bg-dark-2));color:#fff}
-    .container{max-width:1100px;margin:0 auto;padding:20px}
-    header{display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.04)}
-    .logo{font-weight:700;color:var(--red);display:flex;gap:10px;align-items:center}
-    .btn{padding:8px 12px;border-radius:10px;border:0;cursor:pointer;font-weight:600}
-    .btn-outline{background:transparent;border:1px solid rgba(255,255,255,0.06);color:#fff}
-    .btn-primary{background:linear-gradient(90deg,var(--red),#b80710);color:#fff}
-    .hero{padding:60px 0;text-align:center}
-    .grid{display:grid;gap:16px}
-    .card{background:var(--card);padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.04)}
-    .form-control{width:100%;padding:12px;border-radius:8px;border:1px solid rgba(255,255,255,0.06);background:transparent;color:#fff}
-    .file-upload{padding:12px;border-radius:8px;border:1px dashed rgba(255,255,255,0.06);text-align:center;cursor:pointer}
-    footer{padding:30px 0;text-align:center;border-top:1px solid rgba(255,255,255,0.04);margin-top:40px;color:var(--muted)}
-    .hidden{display:none}
-    .two-col{display:grid;grid-template-columns:1fr 360px;gap:20px}
-    .small{font-size:13px;color:var(--muted)}
-    /* Loader styles */
-    #loader-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#fff;z-index:9999;transition:opacity 1.5s ease}
-    .play-icon{width:96px;height:96px;background:transparent;display:flex;align-items:center;justify-content:center}
-    .play-icon svg{width:64px;height:64px;fill:var(--red)}
-    .loader-bar{width:240px;height:6px;background:rgba(0,0,0,0.08);border-radius:6px;margin-top:18px;overflow:hidden;position:relative}
-    .loader-progress{position:absolute;left:50%;right:50%;height:100%;background:var(--red);transform-origin:center;transition:width 0.2s linear,left 0.2s linear,right 0.2s linear}
-    /* Fade transitions for pages */
-    .page {opacity:1;transition:opacity 1s ease}
-    .page.hidden {opacity:0;pointer-events:none}
-    /* Simple responsive */
-    @media (max-width:800px){.two-col{grid-template-columns:1fr}}
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YSM - YouTube Subs Monetization</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.youtube.com/iframe_api"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+    
+    <style>
+        :root {
+            --primary-red: #E50914;
+            --dark-red: #b80710;
+            --black: #000000;
+            --dark-gray: #0a0a0a;
+            --medium-gray: #1a1a1a;
+            --light-gray: #333333;
+            --white: #ffffff;
+            --success: #00ff00;
+            --warning: #ffa500;
+            --glass-bg: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.2);
+        }
 
-  <!-- Firebase compat SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-storage-compat.js"></script>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--black);
+            color: var(--white);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Glassmorphism Effect */
+        .glassmorphism {
+            background: var(--glass-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+            border-radius: 15px;
+        }
+
+        .smooth-3d {
+            transform-style: preserve-3d;
+            perspective: 1000px;
+        }
+
+        .btn-3d {
+            transform: translateZ(20px);
+            transition: all 0.3s ease;
+        }
+
+        .btn-3d:hover {
+            transform: translateZ(30px) translateY(-5px);
+            box-shadow: 0 15px 30px rgba(229, 9, 20, 0.4);
+        }
+
+        header {
+            background: var(--black);
+            padding: 15px 0;
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--primary-red) 0%, var(--dark-red) 100%);
+            color: var(--white);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(229, 9, 20, 0.4);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--white);
+            border: 2px solid var(--white);
+        }
+
+        .btn-success { background-color: var(--success); color: var(--black); }
+        .btn-warning { background-color: var(--warning); color: var(--black); }
+        .btn-danger { background-color: var(--primary-red); color: var(--white); }
+
+        .badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .badge-pending { background: var(--warning); color: var(--black); }
+        .badge-approved { background: var(--success); color: var(--black); }
+        .badge-rejected { background: var(--primary-red); color: var(--white); }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        .spinner {
+            border: 4px solid var(--light-gray);
+            border-top: 4px solid var(--primary-red);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .form-container {
+            max-width: 500px;
+            margin: 100px auto;
+            padding: 40px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            display: none;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+            border: 1px solid var(--glass-border);
+        }
+
+        .form-title {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--primary-red);
+            font-size: 2rem;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 15px;
+            border: 1px solid var(--light-gray);
+            border-radius: 8px;
+            background-color: var(--black);
+            color: var(--white);
+            font-size: 1rem;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .active {
+            display: block;
+        }
+
+        .dashboard {
+            min-height: 100vh;
+            padding-top: 80px;
+            padding-bottom: 70px;
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 20px;
+            background: var(--black);
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            border-bottom: 1px solid var(--glass-border);
+        }
+
+        .wallet-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 15px;
+            margin: 20px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--glass-border);
+        }
+
+        .wallet-balance {
+            font-size: 3rem;
+            font-weight: bold;
+            color: var(--success);
+            margin: 15px 0;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--dark-gray);
+            padding: 12px 0;
+            border-top: 1px solid var(--glass-border);
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: var(--light-gray);
+            text-decoration: none;
+            font-size: 0.9rem;
+        }
+
+        .nav-item.active {
+            color: var(--primary-red);
+        }
+
+        .admin-access {
+            position: fixed;
+            bottom: 10px;
+            right: 10px;
+            background: transparent;
+            border: none;
+            color: transparent;
+            width: 50px;
+            height: 50px;
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .pin-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            margin: 0 5px;
+            border: 2px solid var(--light-gray);
+            border-radius: 8px;
+            background: var(--black);
+            color: var(--white);
+        }
+
+        .pin-container {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        /* Admin Styles */
+        .admin-panel {
+            padding: 20px;
+            margin-top: 80px;
+        }
+
+        .admin-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .admin-nav button {
+            padding: 10px 20px;
+        }
+
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .admin-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 25px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .user-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .balance-control {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .balance-input {
+            width: 100px;
+            padding: 8px;
+            border: 1px solid var(--light-gray);
+            border-radius: 5px;
+            background: var(--black);
+            color: var(--white);
+        }
+
+        /* File Upload Styles */
+        .file-upload {
+            border: 2px dashed var(--light-gray);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            margin: 10px 0;
+            cursor: pointer;
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-red);
+        }
+
+        .file-name {
+            font-size: 0.9rem;
+            color: var(--light-gray);
+            margin-top: 10px;
+        }
+
+        /* Task Video Styles */
+        .task-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .video-container {
+            position: relative;
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 15px;
+        }
+
+        .video-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .task-timer {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        .subscribe-btn {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary-red);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .subscribe-btn:disabled {
+            background: var(--light-gray);
+            cursor: not-allowed;
+        }
+
+        .subscribe-btn:not(:disabled):hover {
+            background: var(--dark-red);
+            transform: translateY(-2px);
+        }
+
+        /* Tier Table Styles */
+        .tier-table {
+            width: 100%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            border-radius: 15px;
+            overflow: hidden;
+            border: 1px solid var(--glass-border);
+        }
+
+        .tier-table th {
+            background: var(--primary-red);
+            padding: 15px;
+            text-align: left;
+        }
+
+        .tier-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid var(--light-gray);
+        }
+
+        .tier-table tr:hover {
+            background: var(--glass-bg);
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            width: 100%;
+            background: var(--light-gray);
+            border-radius: 10px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: linear-gradient(90deg, var(--primary-red), var(--success));
+            border-radius: 10px;
+            transition: width 0.3s ease;
+        }
+
+        /* Marketing Sections */
+        .marketing-section {
+            padding: 80px 0;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .testimonial-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .testimonial-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(20px);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid var(--glass-border);
+        }
+
+        .testimonial-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--primary-red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 1.5rem;
+            margin-bottom: 15px;
+        }
+
+        /* Payment Methods */
+        .payment-methods {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .payment-method {
+            background: var(--glass-bg);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .payment-method.selected {
+            border-color: var(--primary-red);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .wallet-card {
+                margin: 10px;
+            }
+            
+            .tier-table {
+                font-size: 0.8rem;
+            }
+            
+            .video-container {
+                height: 200px;
+            }
+            
+            .feature-grid, .testimonial-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .admin-nav {
+                flex-direction: column;
+            }
+        }
+    </style>
 </head>
 <body>
-  <!-- Loader (shows on every refresh) -->
-  <div id="loader-wrap">
-    <div class="play-icon" aria-hidden="true">
-      <!-- Static 2D Play icon -->
-      <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-        <path d="M3 22V2l18 10L3 22z"></path>
-      </svg>
+
+<!-- Loader Screen -->
+<style>
+#loader-wrap{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;flex-direction:column;background:#fff;z-index:99999;transition:opacity 1.5s ease}
+.play-icon{width:96px;height:96px;display:flex;align-items:center;justify-content:center}
+.play-icon svg{width:64px;height:64px;fill:#FF0000}
+.loader-bar{width:240px;height:6px;background:rgba(0,0,0,0.08);border-radius:6px;margin-top:18px;overflow:hidden;position:relative}
+.loader-progress{position:absolute;left:50%;right:50%;height:100%;background:#FF0000;transform-origin:center;transition:width 0.2s linear,left 0.2s linear,right 0.2s linear}
+</style>
+<div id="loader-wrap">
+  <div class="play-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 22V2l18 10L3 22z"></path></svg></div>
+  <div class="loader-bar"><div id="loader-progress" class="loader-progress" style="left:50%;right:50%;width:0%"></div></div>
+</div>
+<script>
+(function(){
+  const loader = document.getElementById('loader-wrap'); 
+  const prog = document.getElementById('loader-progress');
+  if(!loader || !prog) return;
+  let progress=0, iv=null;
+  function update(p){ 
+    const clamped=Math.max(0,Math.min(100,p)); 
+    const half=(100-clamped)/2; 
+    prog.style.left=half+'%'; 
+    prog.style.right=half+'%'; 
+    prog.style.width='100%'; 
+  }
+  function finish(){ 
+    if(iv) clearInterval(iv); 
+    loader.style.opacity='0'; 
+    setTimeout(()=>{ 
+      loader.style.display='none'; 
+    },1500); 
+  }
+  iv = setInterval(()=>{ 
+    if(progress<60) progress+=Math.random()*2+0.6; 
+    else progress+=Math.random()*3+1; 
+    update(progress); 
+    if(progress>=100) finish(); 
+  },120);
+  setTimeout(()=>{ 
+    if(typeof firebase!=='undefined' && firebase.auth){ 
+      finish(); 
+    } 
+  },3000);
+  setTimeout(()=>{ 
+    if(progress<100) finish(); 
+  },8000);
+})();
+</script>
+
+    <!-- Loading Spinner -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <p>Processing...</p>
     </div>
-    <div class="loader-bar" aria-hidden="true">
-      <div id="loader-progress" class="loader-progress" style="left:50%;right:50%;width:0%"></div>
+
+    <!-- Hidden Admin Access -->
+    <button class="admin-access" onclick="showPage('admin-login-page')" title="Admin Access"></button>
+
+    <!-- Landing Page -->
+    <div id="landing-page" class="page active">
+        <header>
+            <div class="container">
+                <div class="header-content">
+                    <div class="logo">
+                        <i class="fab fa-youtube"></i> YSM
+                    </div>
+                    <div class="auth-buttons">
+                        <button class="btn btn-outline" onclick="showPage('login-page')">Login</button>
+                        <button class="btn btn-primary" onclick="showPage('register-page')">Join YSM</button>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section style="background: linear-gradient(135deg, var(--black) 0%, var(--primary-red) 100%); padding: 180px 0 100px; text-align: center;">
+            <div class="container">
+                <h1 style="font-size: 3.5rem; margin-bottom: 25px;">🌍 Welcome to YSM — Where Attention Becomes Wealth</h1>
+                <p style="font-size: 1.3rem; max-width: 800px; margin: 0 auto 30px;">
+                    In the digital world, attention is the new currency. Every like, every view, every click has value — but for years, that value has only flowed in one direction: away from the users who create it. YSM (YouTube Subs Monetization) was built to change that.
+                </p>
+                <div class="auth-buttons">
+                    <button class="btn btn-primary btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('register-page')">
+                        Join YSM Now
+                    </button>
+                    <button class="btn btn-outline btn-3d" style="font-size: 1.2rem; padding: 15px 35px;" onclick="showPage('login-page')">
+                        Log In to Start Earning
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">💼 How It Works — Partnership, Not Payment</h2>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 40px;">
+                    Every activation tier represents your digital partnership level in the YSM ecosystem. Your contribution helps power sponsored ad campaigns, influencer collaborations, and marketing operations that feed our global reward pool. As the system grows, so does your share of the flow. Each task you complete helps boost platform engagement, attract new sponsors, and increase your potential rewards.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 40px; color: var(--primary-red); font-weight: bold;">
+                    💡 Think of it as turning your time online into a growing digital asset.
+                </p>
+                <div class="feature-grid">
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">📝</div>
+                        <h3 style="margin-bottom: 15px;">1. Register</h3>
+                        <p>Create your account in seconds with our secure registration process</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🔒</div>
+                        <h3 style="margin-bottom: 15px;">2. Complete KYC</h3>
+                        <p>Verify your identity with our secure and fast KYC process</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">💰</div>
+                        <h3 style="margin-bottom: 15px;">3. Watch & Earn</h3>
+                        <p>Get paid for watching sponsored YouTube videos and subscribing</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Growth by Design -->
+        <section class="marketing-section" style="background: var(--black);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">📈 Growth by Design</h2>
+                <div class="feature-grid">
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🕒</div>
+                        <h3 style="margin-bottom: 15px;">Daily Rewards</h3>
+                        <p>Earn by completing simple video-based tasks</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🔝</div>
+                        <h3 style="margin-bottom: 15px;">Tier Levels</h3>
+                        <p>Choose your earning tier — from Starter to Elite — and scale as your returns grow</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">💰</div>
+                        <h3 style="margin-bottom: 15px;">Compound Growth</h3>
+                        <p>Each month's performance builds on the last, unlocking greater long-term returns</p>
+                    </div>
+                    <div class="feature-card smooth-3d">
+                        <div class="feature-icon">🌐</div>
+                        <h3 style="margin-bottom: 15px;">Community Ecosystem</h3>
+                        <p>Your success contributes to platform growth — meaning more users, more campaigns, more revenue</p>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 40px auto 0; color: var(--primary-red); font-weight: bold;">
+                    ✨ You're not just a user. You're part of the system that fuels itself.
+                </p>
+            </div>
+        </section>
+
+        <!-- The Vision -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 30px;">🚀 The Vision — Millions United by Growth</h2>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 30px;">
+                    Our goal is to empower over 1 million digital partners who earn, grow, and evolve together. We're not building another "task app" — we're creating a digital wealth ecosystem that rewards participation, not speculation.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 0 auto 30px; font-weight: bold;">
+                    Every action matters. Every view counts. Every day adds up.
+                </p>
+                <p style="text-align: center; font-size: 1.2rem; max-width: 900px; margin: 30px auto 0; color: var(--primary-red); font-style: italic;">
+                    💬 "The future doesn't belong to those who work harder — it belongs to those who work smarter."
+                </p>
+            </div>
+        </section>
+
+        <!-- Success Stories -->
+        <section class="marketing-section" style="background: var(--black);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">🌟 Success Stories</h2>
+                <div class="testimonial-grid">
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">JD</div>
+                        <h3 style="margin-bottom: 10px;">John D. - New York</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $1,250 in 3 months</p>
+                        <p>"I was skeptical at first, but YSM has completely changed how I earn online. The platform is easy to use and payments are always on time. I've upgraded to the $769.23 tier and my earnings have tripled!"</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">SM</div>
+                        <h3 style="margin-bottom: 10px;">Sarah M. - London</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $2,800 in 6 months</p>
+                        <p>"As a student, YSM has been a game-changer. I can earn while studying. The tier system really works! I started with the basic tier and now I'm at the $1,692.31 level. The compound growth is incredible."</p>
+                    </div>
+                    <div class="testimonial-card">
+                        <div class="testimonial-avatar">RK</div>
+                        <h3 style="margin-bottom: 10px;">Robert K. - Nairobi</h3>
+                        <p style="color: var(--success); margin-bottom: 10px;">Earned $5,100 in 1 year</p>
+                        <p>"The referral program is amazing. I've built a team of 15 people and earn passive income from their activities. YSM has given me financial freedom I never thought possible."</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Tier Table -->
+        <section class="marketing-section" style="background: var(--dark-gray);">
+            <div class="container">
+                <h2 style="text-align: center; font-size: 2.5rem; margin-bottom: 50px;">Investment Tiers</h2>
+                <div class="tier-table-container" style="overflow-x: auto;">
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Ads/Day</th>
+                                <th>Pay/Ad</th>
+                                <th>Daily</th>
+                                <th>Monthly</th>
+                                <th>6-Month</th>
+                                <th>1-Year</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>$115.38</td><td>8</td><td>$0.48</td><td>$3.85</td><td>$115.38</td><td>$692.31</td><td>$1,384.62</td></tr>
+                            <tr><td>$192.31</td><td>10</td><td>$0.64</td><td>$6.41</td><td>$192.31</td><td>$1,153.85</td><td>$2,307.69</td></tr>
+                            <tr><td>$269.23</td><td>12</td><td>$0.75</td><td>$8.97</td><td>$269.23</td><td>$1,615.38</td><td>$3,230.77</td></tr>
+                            <tr><td>$307.69</td><td>13</td><td>$0.79</td><td>$10.26</td><td>$307.69</td><td>$1,846.15</td><td>$3,692.31</td></tr>
+                            <tr><td>$461.54</td><td>15</td><td>$1.03</td><td>$15.38</td><td>$461.54</td><td>$2,769.23</td><td>$5,538.46</td></tr>
+                            <tr><td>$615.38</td><td>17</td><td>$1.21</td><td>$20.51</td><td>$615.38</td><td>$3,692.31</td><td>$7,384.62</td></tr>
+                            <tr><td>$769.23</td><td>18</td><td>$1.43</td><td>$25.64</td><td>$769.23</td><td>$4,615.38</td><td>$9,230.77</td></tr>
+                            <tr><td>$923.08</td><td>20</td><td>$1.54</td><td>$30.77</td><td>$923.08</td><td>$5,538.46</td><td>$11,076.92</td></tr>
+                            <tr><td>$1,692.31</td><td>25</td><td>$2.26</td><td>$56.41</td><td>$1,692.31</td><td>$10,153.85</td><td>$20,307.69</td></tr>
+                            <tr><td>$2,461.54</td><td>30</td><td>$2.74</td><td>$82.05</td><td>$2,461.54</td><td>$14,769.23</td><td>$29,538.46</td></tr>
+                            <tr><td>$3,230.77</td><td>35</td><td>$3.08</td><td>$107.69</td><td>$3,230.77</td><td>$19,384.62</td><td>$38,769.23</td></tr>
+                            <tr><td>$4,000.00</td><td>40</td><td>$3.33</td><td>$133.33</td><td>$4,000.00</td><td>$24,000.00</td><td>$48,000.00</td></tr>
+                            <tr><td>$4,615.38</td><td>45</td><td>$3.42</td><td>$153.85</td><td>$4,615.38</td><td>$27,692.31</td><td>$55,384.62</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div style="text-align: center; margin-top: 30px;">
+                    <button class="btn btn-primary btn-3d" onclick="showPage('register-page')">Start Earning Now</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer style="background: var(--black); padding: 40px 0; border-top: 1px solid var(--glass-border);">
+            <div class="container">
+                <div style="text-align: center;">
+                    <p>&copy; 2024 YSM - YouTube Subs Monetization. All rights reserved.</p>
+                    <div style="margin-top: 20px;">
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Terms</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Privacy</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Contact</a>
+                        <a href="#" style="color: var(--white); margin: 0 10px;">Support</a>
+                    </div>
+                </div>
+            </div>
+        </footer>
     </div>
-  </div>
 
-  <!-- App container -->
-  <div class="container" id="app-root" style="opacity:0;transition:opacity 1s ease">
-    <header>
-      <div class="logo" style="font-size:18px">YSM</div>
-      <div>
-        <a class="small nav-link" href="#" onclick="showPage('landing-page')">Home</a>
-        <button class="btn btn-outline" id="btn-login" onclick="showPage('login-page')">Login</button>
-        <button class="btn btn-primary" id="btn-register" onclick="showPage('register-page')">Join YSM</button>
-      </div>
-    </header>
-
-    <main style="padding:20px">
-      <!-- Landing -->
-      <section id="landing-page" class="page">
-        <div class="hero">
-          <h1 style="font-size:28px">🌍 Welcome to YSM — Where Attention Becomes Wealth</h1>
-          <p class="small" style="max-width:800px;margin:10px auto">Watch sponsored videos, complete tasks, and earn. Secure KYC & admin-managed tiers.</p>
-          <div style="margin-top:18px">
-            <button class="btn btn-primary" onclick="showPage('register-page')">Get Started</button>
-            <button class="btn btn-outline" onclick="showPage('login-page')">Sign In</button>
-          </div>
+    <!-- Registration Page -->
+    <div id="register-page" class="page form-container">
+        <h2 class="form-title">Join YSM</h2>
+        <div class="form-group">
+            <input type="text" class="form-control" id="reg-name" placeholder="Full Name" required>
         </div>
-      </section>
-
-      <!-- Register -->
-      <section id="register-page" class="page hidden">
-        <div class="card" style="max-width:720px;margin:auto">
-          <h2>Create Account</h2>
-          <div style="margin-top:10px"><input id="reg-name" class="form-control" placeholder="Full name"></div>
-          <div style="margin-top:10px"><input id="reg-email" class="form-control" placeholder="Email"></div>
-          <div style="margin-top:10px"><input id="reg-phone" class="form-control" placeholder="Phone"></div>
-          <div style="margin-top:10px"><input id="reg-country" class="form-control" placeholder="Country"></div>
-          <div style="margin-top:10px"><input id="reg-password" type="password" class="form-control" placeholder="Password"></div>
-          <div style="margin-top:12px">
-            <button class="btn btn-primary" onclick="registerUser()">Create Account</button>
-            <button class="btn btn-outline" onclick="showPage('landing-page')">Back</button>
-          </div>
-          <p class="small" style="margin-top:10px">A verification email will be sent. You can login before verifying but some features may be restricted.</p>
+        <div class="form-group">
+            <input type="email" class="form-control" id="reg-email" placeholder="Email Address" required>
         </div>
-      </section>
-
-      <!-- Login -->
-      <section id="login-page" class="page hidden">
-        <div class="card" style="max-width:720px;margin:auto">
-          <h2>Login</h2>
-          <div style="margin-top:10px"><input id="login-email" class="form-control" placeholder="Email"></div>
-          <div style="margin-top:10px"><input id="login-password" type="password" class="form-control" placeholder="Password"></div>
-          <div style="margin-top:12px">
-            <button class="btn btn-primary" onclick="loginUser()">Login</button>
-            <button class="btn btn-outline" onclick="showPage('landing-page')">Back</button>
-          </div>
+        <div class="form-group">
+            <input type="password" class="form-control" id="reg-password" placeholder="Password" required>
         </div>
-      </section>
-
-      <!-- User Dashboard (placeholder -- your original UI will be used) -->
-      <section id="user-dashboard" class="page hidden">
-        <div class="card">
-          <h2>Welcome, <span id="dash-name">User</span></h2>
-          <div class="small" id="dash-kyc">KYC: -</div>
-          <div style="margin-top:12px">
-            <button class="btn btn-primary" onclick="openKYC()">Submit/View KYC</button>
-            <button class="btn btn-outline" onclick="openTasks()">Tasks</button>
-          </div>
+        <div class="form-group">
+            <input type="password" class="form-control" id="reg-confirm-password" placeholder="Confirm Password" required>
         </div>
-      </section>
+        <div class="form-group">
+            <input type="text" class="form-control" id="reg-phone" placeholder="Phone Number" required>
+        </div>
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100%;" onclick="registerUser()">Create Account</button>
+        </div>
+        <div style="text-align: center;">
+            <p>Already have an account? <a href="#" onclick="showPage('login-page')" style="color: var(--primary-red);">Login here</a></p>
+        </div>
+    </div>
 
-      <!-- KYC page -->
-      <section id="kyc-page" class="page hidden">
-        <div class="card" style="max-width:720px;margin:auto">
-          <h2>KYC Verification</h2>
-          <div style="margin-top:10px"><input id="kyc-name" class="form-control" placeholder="Full name"></div>
+    <!-- Login Page -->
+    <div id="login-page" class="page form-container">
+        <h2 class="form-title">Login to YSM</h2>
+        <div class="form-group">
+            <input type="email" class="form-control" id="login-email" placeholder="Email Address" required>
+        </div>
+        <div class="form-group">
+            <input type="password" class="form-control" id="login-password" placeholder="Password" required>
+        </div>
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100%;" onclick="loginUser()">Login</button>
+        </div>
+        <div style="text-align: center;">
+            <p>Don't have an account? <a href="#" onclick="showPage('register-page')" style="color: var(--primary-red);">Register here</a></p>
+        </div>
+    </div>
 
-          <div style="margin-top:10px">
-            <label>ID front</label>
-            <div class="file-upload" id="kyc-front-upload">Click to select
-              <input id="kyc-front" type="file" accept="image/*" class="hidden">
+    <!-- OTP Verification Page -->
+    <div id="otp-page" class="page form-container">
+        <h2 class="form-title">Verify Your Account</h2>
+        <p style="text-align: center; margin-bottom: 20px;">We've sent a verification code to your email</p>
+        <div class="pin-container">
+            <input type="text" class="pin-input" maxlength="1" oninput="moveToNext(this, 1)">
+            <input type="text" class="pin-input" maxlength="1" oninput="moveToNext(this, 2)">
+            <input type="text" class="pin-input" maxlength="1" oninput="moveToNext(this, 3)">
+            <input type="text" class="pin-input" maxlength="1" oninput="moveToNext(this, 4)">
+            <input type="text" class="pin-input" maxlength="1" oninput="moveToNext(this, 5)">
+            <input type="text" class="pin-input" maxlength="1" oninput="moveToNext(this, 6)">
+        </div>
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100%;" onclick="verifyOTP()">Verify Account</button>
+        </div>
+        <div style="text-align: center;">
+            <p>Didn't receive code? <a href="#" style="color: var(--primary-red);" onclick="resendOTP()">Resend</a></p>
+        </div>
+    </div>
+
+    <!-- Dashboard -->
+    <div id="dashboard-page" class="page">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fab fa-youtube"></i> YSM
             </div>
-            <div class="small" id="kyc-front-name">No file chosen</div>
-          </div>
-
-          <div style="margin-top:10px">
-            <label>ID back</label>
-            <div class="file-upload" id="kyc-back-upload">Click to select
-              <input id="kyc-back" type="file" accept="image/*" class="hidden">
+            <div>
+                <span id="user-name" style="margin-right: 15px;"></span>
+                <button class="btn btn-outline" onclick="logout()">Logout</button>
             </div>
-            <div class="small" id="kyc-back-name">No file chosen</div>
-          </div>
+        </div>
 
-          <div style="margin-top:10px">
-            <label>Selfie with ID</label>
-            <div class="file-upload" id="kyc-selfie-upload">Click to select
-              <input id="kyc-selfie" type="file" accept="image/*" class="hidden">
+        <div class="dashboard">
+            <!-- Wallet Card -->
+            <div class="wallet-card">
+                <h3>Your Wallet</h3>
+                <div class="wallet-balance" id="wallet-balance">$0.00</div>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn btn-primary" onclick="showPage('withdraw-page')">Withdraw</button>
+                    <button class="btn btn-outline" onclick="showPage('tier-page')">Upgrade Tier</button>
+                </div>
             </div>
-            <div class="small" id="kyc-selfie-name">No file chosen</div>
-          </div>
 
-          <div style="margin-top:12px">
-            <button class="btn btn-primary" onclick="submitKYC()">Submit KYC</button>
-            <button class="btn btn-outline" onclick="showPage('user-dashboard')">Back</button>
-          </div>
+            <!-- Stats -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px;">
+                <div class="glassmorphism" style="padding: 20px; text-align: center;">
+                    <h4>Tasks Completed</h4>
+                    <p style="font-size: 1.5rem; color: var(--success);" id="tasks-completed">0</p>
+                </div>
+                <div class="glassmorphism" style="padding: 20px; text-align: center;">
+                    <h4>Current Tier</h4>
+                    <p style="font-size: 1.5rem; color: var(--primary-red);" id="current-tier">Starter</p>
+                </div>
+                <div class="glassmorphism" style="padding: 20px; text-align: center;">
+                    <h4>KYC Status</h4>
+                    <p id="kyc-status" class="badge badge-pending">Pending</p>
+                </div>
+            </div>
+
+            <!-- Tasks -->
+            <div style="margin: 20px;">
+                <h3 style="margin-bottom: 15px;">Available Tasks</h3>
+                <div id="tasks-container">
+                    <!-- Tasks will be loaded here -->
+                </div>
+            </div>
         </div>
-      </section>
 
-      <!-- KYC pending page -->
-      <section id="kyc-pending-page" class="page hidden">
-        <div class="card" style="max-width:720px;margin:auto">
-          <h2>KYC Pending</h2>
-          <p class="small">Your KYC documents are under review. Admin will approve or reject shortly.</p>
+        <!-- Bottom Navigation -->
+        <div class="bottom-nav">
+            <a class="nav-item active" onclick="showPage('dashboard-page')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tasks-page')">
+                <i class="fas fa-tasks"></i>
+                <span>Tasks</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tier-page')">
+                <i class="fas fa-chart-line"></i>
+                <span>Tiers</span>
+            </a>
+            <a class="nav-item" onclick="showPage('profile-page')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
         </div>
-      </section>
+    </div>
 
-      <!-- Admin dashboard -->
-      <section id="admin-dashboard" class="page hidden">
-        <div class="card">
-          <h2>Admin Dashboard</h2>
-          <div id="admin-stats" class="small">Loading admin stats...</div>
-          <div id="admin-kyc-list" style="margin-top:12px"></div>
+    <!-- Tasks Page -->
+    <div id="tasks-page" class="page">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fas fa-arrow-left" onclick="showPage('dashboard-page')" style="cursor: pointer;"></i>
+                <span style="margin-left: 10px;">Tasks</span>
+            </div>
+            <div>
+                <span id="user-name-tasks"></span>
+            </div>
         </div>
-      </section>
-    </main>
 
-    <footer>
-      &copy; 2025 YSM. All rights reserved.
-    </footer>
-  </div>
+        <div class="dashboard">
+            <div style="margin: 20px;">
+                <h2>Available Tasks</h2>
+                <p style="margin-bottom: 20px;">Watch videos and subscribe to channels to earn money</p>
+                
+                <div id="tasks-list">
+                    <!-- Tasks will be loaded here -->
+                </div>
+            </div>
+        </div>
 
-  <!-- Modal placeholder -->
-  <div id="modal" class="hidden card" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);min-width:320px;z-index:10000"></div>
+        <div class="bottom-nav">
+            <a class="nav-item" onclick="showPage('dashboard-page')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a class="nav-item active" onclick="showPage('tasks-page')">
+                <i class="fas fa-tasks"></i>
+                <span>Tasks</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tier-page')">
+                <i class="fas fa-chart-line"></i>
+                <span>Tiers</span>
+            </a>
+            <a class="nav-item" onclick="showPage('profile-page')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </div>
 
-  <script>
-  // ===================== Helpers & UI =====================
-  function $(id){ return document.getElementById(id); }
-  function showPage(pageId){
-    // Hide all .page sections, then show the requested one
-    document.querySelectorAll('.page').forEach(p => p.classList.add('hidden'));
-    const el = document.getElementById(pageId);
-    if (el) {
-      el.classList.remove('hidden');
-      window.scrollTo(0,0);
-    } else {
-      console.warn('showPage: Page not found ->', pageId);
-    }
-  }
+    <!-- Tier Page -->
+    <div id="tier-page" class="page">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fas fa-arrow-left" onclick="showPage('dashboard-page')" style="cursor: pointer;"></i>
+                <span style="margin-left: 10px;">Investment Tiers</span>
+            </div>
+            <div>
+                <span id="user-name-tier"></span>
+            </div>
+        </div>
 
-  function openModal(html){
-    const m = $('modal'); if(!m) return;
-    m.innerHTML = html; m.classList.remove('hidden');
-  }
-  function closeModal(){ const m = $('modal'); if(!m) return; m.classList.add('hidden'); m.innerHTML=''; }
+        <div class="dashboard">
+            <div style="margin: 20px;">
+                <h2>Investment Tiers</h2>
+                <p style="margin-bottom: 20px;">Upgrade your tier to increase your earning potential</p>
+                
+                <div class="tier-table-container" style="overflow-x: auto;">
+                    <table class="tier-table">
+                        <thead>
+                            <tr>
+                                <th>Tier</th>
+                                <th>Ads/Day</th>
+                                <th>Pay/Ad</th>
+                                <th>Daily</th>
+                                <th>Monthly</th>
+                                <th>6-Month</th>
+                                <th>1-Year</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tier-table-body">
+                            <!-- Tier data will be loaded here -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
 
-  // Minimal user-facing messages (non-blocking)
-  function showSuccess(msg){ console.info(msg); /* optionally toast */ }
-  function showError(msg){ console.error(msg); alert(msg); }
-  function showLoading(){ /* optional spinner */ }
-  function hideLoading(){ /* hide spinner */ }
+        <div class="bottom-nav">
+            <a class="nav-item" onclick="showPage('dashboard-page')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tasks-page')">
+                <i class="fas fa-tasks"></i>
+                <span>Tasks</span>
+            </a>
+            <a class="nav-item active" onclick="showPage('tier-page')">
+                <i class="fas fa-chart-line"></i>
+                <span>Tiers</span>
+            </a>
+            <a class="nav-item" onclick="showPage('profile-page')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </div>
 
-  // UI navigation helpers used inside pages
-  function openKYC(){ showPage('kyc-page'); }
-  function openTasks(){ openModal('<h3>Tasks</h3><p>Task list placeholder</p>'); }
+    <!-- Profile Page -->
+    <div id="profile-page" class="page">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fas fa-arrow-left" onclick="showPage('dashboard-page')" style="cursor: pointer;"></i>
+                <span style="margin-left: 10px;">Profile</span>
+            </div>
+            <div>
+                <span id="user-name-profile"></span>
+            </div>
+        </div>
 
-  // ===================== Firebase setup =====================
-  const firebaseConfig = {
-    apiKey: "AIzaSyDOKJQayF5j5xCp6LVZEEFFJH0QiQtezgg",
-    authDomain: "ysm-platform-6ef20.firebaseapp.com",
-    projectId: "ysm-platform-6ef20",
-    storageBucket: "ysm-platform-6ef20.appspot.com",
-    messagingSenderId: "485407332553",
-    appId: "1:485407332553:web:77bd1bf2b3146486e51518"
-  };
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.firestore();
-  const storage = firebase.storage();
+        <div class="dashboard">
+            <div style="margin: 20px;">
+                <h2>Your Profile</h2>
+                
+                <div class="glassmorphism" style="padding: 25px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px;">Account Information</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                        <div>
+                            <p><strong>Name:</strong> <span id="profile-name"></span></p>
+                            <p><strong>Email:</strong> <span id="profile-email"></span></p>
+                            <p><strong>Phone:</strong> <span id="profile-phone"></span></p>
+                        </div>
+                        <div>
+                            <p><strong>Joined:</strong> <span id="profile-joined"></span></p>
+                            <p><strong>KYC Status:</strong> <span id="profile-kyc"></span></p>
+                            <p><strong>Current Tier:</strong> <span id="profile-tier"></span></p>
+                        </div>
+                    </div>
+                </div>
 
-  // App state
-  let currentUser = null;
-  let userId = null;
-  let appReadyResolve;
-  const appReady = new Promise(resolve => { appReadyResolve = resolve; });
+                <div class="glassmorphism" style="padding: 25px; margin-bottom: 20px;">
+                    <h3 style="margin-bottom: 15px;">KYC Verification</h3>
+                    <p style="margin-bottom: 15px;">Complete KYC verification to unlock full platform features</p>
+                    <div id="kyc-section">
+                        <!-- KYC form will be loaded here -->
+                    </div>
+                </div>
 
-  // ===================== Loader logic (adaptive) =====================
-  const loaderWrap = $('loader-wrap');
-  const loaderProgress = $('loader-progress');
-  // Simulated progress state - grows towards readiness; grows faster if appReady resolves early
-  let progress = 0;
-  let progressInterval = null;
+                <div class="glassmorphism" style="padding: 25px;">
+                    <h3 style="margin-bottom: 15px;">Security</h3>
+                    <button class="btn btn-outline" onclick="showPage('change-password-page')">Change Password</button>
+                </div>
+            </div>
+        </div>
 
-  function startAdaptiveLoader(){
-    // Reset
-    progress = 0;
-    loaderProgress.style.left = '50%';
-    loaderProgress.style.right = '50%';
-    loaderProgress.style.width = '0%';
-    loaderWrap.style.opacity = '1';
-    loaderWrap.style.display = 'flex';
+        <div class="bottom-nav">
+            <a class="nav-item" onclick="showPage('dashboard-page')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tasks-page')">
+                <i class="fas fa-tasks"></i>
+                <span>Tasks</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tier-page')">
+                <i class="fas fa-chart-line"></i>
+                <span>Tiers</span>
+            </a>
+            <a class="nav-item active" onclick="showPage('profile-page')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </div>
 
-    // progress tick: grows slowly from center; if appReady resolves, we accelerate to 100
-    progressInterval = setInterval(() => {
-      // incremental growth (slower when small, faster when larger)
-      if (progress < 60) progress += Math.random() * 2 + 0.6; // steady initial
-      else progress += Math.random() * 4 + 1.2; // accelerate later
-      updateLoaderVisual(progress);
-      if (progress >= 99) {
-        finishLoader();
-      }
-    }, 120);
+    <!-- Withdraw Page -->
+    <div id="withdraw-page" class="page">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fas fa-arrow-left" onclick="showPage('dashboard-page')" style="cursor: pointer;"></i>
+                <span style="margin-left: 10px;">Withdraw Funds</span>
+            </div>
+            <div>
+                <span id="user-name-withdraw"></span>
+            </div>
+        </div>
 
-    // If appReady resolves, speed to completion within ~700-1200ms
-    appReady.then(() => {
-      // accelerate to 100 smoothly
-      const targetInc = () => {
-        progress += 6 + Math.random()*8;
-        updateLoaderVisual(progress);
-        if (progress < 100) setTimeout(targetInc, 80);
-        else finishLoader();
-      };
-      targetInc();
-    });
+        <div class="dashboard">
+            <div class="wallet-card">
+                <h3>Withdraw Funds</h3>
+                <p style="margin-bottom: 20px;">Available Balance: <span id="withdraw-balance" style="font-weight: bold; color: var(--success);">$0.00</span></p>
+                
+                <div class="form-group">
+                    <label>Amount to Withdraw</label>
+                    <input type="number" class="form-control" id="withdraw-amount" placeholder="Enter amount">
+                </div>
+                
+                <div class="form-group">
+                    <label>Payment Method</label>
+                    <div class="payment-methods">
+                        <div class="payment-method" onclick="selectPaymentMethod(this, 'paypal')">
+                            <i class="fab fa-paypal" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>PayPal</p>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod(this, 'bank')">
+                            <i class="fas fa-university" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>Bank Transfer</p>
+                        </div>
+                        <div class="payment-method" onclick="selectPaymentMethod(this, 'crypto')">
+                            <i class="fab fa-bitcoin" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                            <p>Crypto</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Payment Details</label>
+                    <input type="text" class="form-control" id="payment-details" placeholder="Enter payment details">
+                </div>
+                
+                <div class="form-group">
+                    <label>Security PIN</label>
+                    <div class="pin-container">
+                        <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 1)">
+                        <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 2)">
+                        <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 3)">
+                        <input type="password" class="pin-input" maxlength="1" oninput="moveToNext(this, 4)">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <button class="btn btn-primary" style="width: 100%;" onclick="processWithdrawal()">Withdraw Funds</button>
+                </div>
+            </div>
+        </div>
 
-    // Safety timeout: never stay more than 8 seconds
-    setTimeout(() => { if (progress < 100) finishLoader(); }, 8000);
-  }
+        <div class="bottom-nav">
+            <a class="nav-item" onclick="showPage('dashboard-page')">
+                <i class="fas fa-home"></i>
+                <span>Home</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tasks-page')">
+                <i class="fas fa-tasks"></i>
+                <span>Tasks</span>
+            </a>
+            <a class="nav-item" onclick="showPage('tier-page')">
+                <i class="fas fa-chart-line"></i>
+                <span>Tiers</span>
+            </a>
+            <a class="nav-item" onclick="showPage('profile-page')">
+                <i class="fas fa-user"></i>
+                <span>Profile</span>
+            </a>
+        </div>
+    </div>
 
-  function updateLoaderVisual(p){
-    const clamped = Math.min(100, Math.max(0, p));
-    // We animate growth from center: left=50 - clamped/2%, right=50 - clamped/2%
-    const half = (100 - clamped) / 2;
-    loaderProgress.style.left = half + '%';
-    loaderProgress.style.right = half + '%';
-    // width is auto-calculated via left/right; set width 100% to ensure full fill when left=0,right=0
-    loaderProgress.style.width = '100%';
-  }
+    <!-- Admin Login -->
+    <div id="admin-login-page" class="page form-container">
+        <h2 class="form-title">Admin Access</h2>
+        <div class="form-group">
+            <input type="text" class="form-control" id="admin-email" placeholder="Admin Email" required>
+        </div>
+        <div class="form-group">
+            <input type="password" class="form-control" id="admin-password" placeholder="Admin Password" required>
+        </div>
+        <div class="form-group">
+            <button class="btn btn-primary" style="width: 100%;" onclick="adminLogin()">Access Admin Panel</button>
+        </div>
+    </div>
 
-  function finishLoader(){
-    if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
-    // Fade out loader over 1.5s, then show app
-    loaderWrap.style.opacity = '0';
-    setTimeout(() => {
-      loaderWrap.style.display = 'none';
-      // Show app root (fade in)
-      document.getElementById('app-root').style.opacity = '1';
-      // Show default landing page (unless user is already signed in and will be routed)
-      showPage('landing-page');
-    }, 1500);
-  }
+    <!-- Admin Panel -->
+    <div id="admin-panel" class="page">
+        <div class="top-bar">
+            <div class="logo">
+                <i class="fas fa-cogs"></i> YSM Admin
+            </div>
+            <div>
+                <button class="btn btn-outline" onclick="logout()">Logout</button>
+            </div>
+        </div>
 
-  // Start loader immediately
-  startAdaptiveLoader();
+        <div class="admin-panel">
+            <div class="admin-nav">
+                <button class="btn btn-primary" onclick="showAdminSection('users')">Users</button>
+                <button class="btn btn-primary" onclick="showAdminSection('kyc')">KYC Requests</button>
+                <button class="btn btn-primary" onclick="showAdminSection('withdrawals')">Withdrawals</button>
+                <button class="btn btn-primary" onclick="showAdminSection('tasks')">Task Management</button>
+                <button class="btn btn-primary" onclick="showAdminSection('analytics')">Analytics</button>
+            </div>
 
-  // ===================== Auth & App logic =====================
-  // registerUser: create user, create firestore doc, send email verification
-  async function registerUser(){
-    const name = $('reg-name')?.value?.trim();
-    const email = $('reg-email')?.value?.trim();
-    const phone = $('reg-phone')?.value?.trim();
-    const country = $('reg-country')?.value?.trim();
-    const password = $('reg-password')?.value;
-    if (!name || !email || !phone || !country || !password) { showError('Please fill all fields'); return; }
-    showLoading();
-    try {
-      const ucred = await auth.createUserWithEmailAndPassword(email, password);
-      const u = ucred.user;
-      if (!u) throw new Error('User creation failed');
-      // Create user doc
-      await db.collection('users').doc(u.uid).set({
-        name, email, phone, country, tier:'unassigned', kycStatus:'unverified', role:'user', createdAt:new Date().toISOString()
-      });
-      // send verification email (best-effort)
-      try { await u.sendEmailVerification(); showSuccess('Verification email sent.'); } catch(e){ console.warn('verification send failed:', e); }
-      // Success message; auth state listener will handle UI
-      showSuccess('Account created. Check your email for verification.');
-      showPage('landing-page');
-    } catch (err){
-      console.error('Register error', err);
-      showError('Registration failed: ' + (err.message || err));
-    } finally { hideLoading(); }
-  }
+            <!-- Users Section -->
+            <div id="admin-users" class="admin-section">
+                <h2>User Management</h2>
+                <div class="admin-card user-list">
+                    <div class="user-item">
+                        <div>
+                            <strong>John Doe</strong>
+                            <p>john@example.com</p>
+                        </div>
+                        <div>
+                            <span class="badge badge-approved">Approved</span>
+                        </div>
+                        <div class="balance-control">
+                            <input type="number" class="balance-input" placeholder="Amount">
+                            <button class="btn btn-success">Add</button>
+                            <button class="btn btn-danger">Deduct</button>
+                        </div>
+                    </div>
+                    <!-- More users will be loaded here -->
+                </div>
+            </div>
 
-  // loginUser: sign in, allow login even if not verified but show banner
-  async function loginUser(){
-    const email = $('login-email')?.value?.trim();
-    const password = $('login-password')?.value;
-    if (!email || !password) { showError('Enter email & password.'); return; }
-    showLoading();
-    try {
-      const cred = await auth.signInWithEmailAndPassword(email, password);
-      const u = cred.user;
-      if (u && !u.emailVerified) showSuccess('Logged in — please verify your email. Some features may be restricted.');
-      else showSuccess('Logged in successfully.');
-    } catch (err){
-      console.error('Login error', err);
-      showError('Login failed: ' + (err.message || err));
-    } finally { hideLoading(); }
-  }
+            <!-- KYC Section -->
+            <div id="admin-kyc" class="admin-section" style="display: none;">
+                <h2>KYC Verification Requests</h2>
+                <div class="admin-grid">
+                    <div class="admin-card">
+                        <h3>Pending KYC</h3>
+                        <div class="user-list">
+                            <!-- Pending KYC requests will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="admin-card">
+                        <h3>Approved KYC</h3>
+                        <div class="user-list">
+                            <!-- Approved KYC requests will be loaded here -->
+                        </div>
+                    </div>
+                    <div class="admin-card">
+                        <h3>Rejected KYC</h3>
+                        <div class="user-list">
+                            <!-- Rejected KYC requests will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
 
-  function logout(){
-    auth.signOut().then(()=>{ showSuccess('Logged out'); showPage('landing-page'); }).catch(err => { console.error('Logout error', err); showError('Logout failed'); });
-  }
+            <!-- Withdrawals Section -->
+            <div id="admin-withdrawals" class="admin-section" style="display: none;">
+                <h2>Withdrawal Requests</h2>
+                <div class="admin-card">
+                    <div class="user-list">
+                        <!-- Withdrawal requests will be loaded here -->
+                    </div>
+                </div>
+            </div>
 
-  // submitKYC: upload files and set kycStatus pending
-  async function submitKYC(){
-    const fullName = $('kyc-name')?.value?.trim();
-    const frontInput = $('kyc-front');
-    const backInput = $('kyc-back');
-    const selfieInput = $('kyc-selfie');
-    if (!currentUser || !currentUser.id) { showError('No authenticated user'); return; }
-    if (!fullName || !frontInput?.files?.length || !backInput?.files?.length || !selfieInput?.files?.length) { showError('Please complete KYC and upload required files'); return; }
-    showLoading();
-    try {
-      const uid = currentUser.id;
-      // upload front
-      const frontPath = `user_uploads/${uid}/kyc-front-${Date.now()}-${frontInput.files[0].name}`;
-      const backPath = `user_uploads/${uid}/kyc-back-${Date.now()}-${backInput.files[0].name}`;
-      const selfiePath = `user_uploads/${uid}/kyc-selfie-${Date.now()}-${selfieInput.files[0].name}`;
-      const frontRef = storage.ref(frontPath);
-      const backRef = storage.ref(backPath);
-      const selfieRef = storage.ref(selfiePath);
-      await frontRef.put(frontInput.files[0]);
-      await backRef.put(backInput.files[0]);
-      await selfieRef.put(selfieInput.files[0]);
-      const frontUrl = await frontRef.getDownloadURL();
-      const backUrl = await backRef.getDownloadURL();
-      const selfieUrl = await selfieRef.getDownloadURL();
-      await db.collection('users').doc(uid).update({
-        kycStatus: 'pending',
-        kyc: { fullName, frontUrl, backUrl, selfieUrl, submittedAt: new Date().toISOString() }
-      });
-      showSuccess('KYC submitted — pending admin review.');
-      showPage('kyc-pending-page');
-    } catch (err) {
-      console.error('KYC submit error', err);
-      showError('Failed to submit KYC: ' + (err.message || err));
-    } finally { hideLoading(); }
-  }
+            <!-- Tasks Section -->
+            <div id="admin-tasks" class="admin-section" style="display: none;">
+                <h2>Task Management</h2>
+                <div class="admin-card">
+                    <button class="btn btn-primary" onclick="showAddTaskModal()">Add New Task</button>
+                    <div class="user-list">
+                        <!-- Tasks will be loaded here -->
+                    </div>
+                </div>
+            </div>
 
-  // loadAdminPanel: basic admin listing
-  async function loadAdminPanel(){
-    showPage('admin-dashboard');
-    const statsEl = $('admin-stats'); const listEl = $('admin-kyc-list');
-    if (statsEl) statsEl.textContent = 'Loading...';
-    if (listEl) listEl.textContent = 'Loading...';
-    try {
-      const all = await db.collection('users').get();
-      const pending = await db.collection('users').where('kycStatus','==','pending').get();
-      if (statsEl) statsEl.innerHTML = `Total users: <strong>${all.size}</strong><br>Pending KYC: <strong>${pending.size}</strong>`;
-      if (listEl) {
-        if (pending.size === 0) listEl.textContent = 'No pending KYC.';
-        else {
-          let html=''; pending.forEach(doc => {
-            const d=doc.data();
-            html += `<div style="padding:8px;border-bottom:1px solid rgba(255,255,255,0.04)"><strong>${d.name||d.email}</strong><div class="small">Submitted: ${d.kyc?.submittedAt||'N/A'}</div><div style="margin-top:6px"><button class="btn btn-primary" data-uid="${doc.id}" data-action="approve">Approve</button> <button class="btn btn-outline" data-uid="${doc.id}" data-action="reject">Reject</button></div></div>`;
-          });
-          listEl.innerHTML = html;
-          listEl.querySelectorAll('button').forEach(btn => {
-            btn.addEventListener('click', async (ev) => {
-              const uid = ev.target.getAttribute('data-uid');
-              const action = ev.target.getAttribute('data-action');
-              try {
-                await db.collection('users').doc(uid).update({ kycStatus: action === 'approve' ? 'approved' : 'rejected' });
-                alert('KYC ' + (action==='approve'?'approved':'rejected') + ' for ' + uid);
-                loadAdminPanel();
-              } catch(e) { console.error(e); alert('Failed to update'); }
+            <!-- Analytics Section -->
+            <div id="admin-analytics" class="admin-section" style="display: none;">
+                <h2>Platform Analytics</h2>
+                <div class="admin-grid">
+                    <div class="admin-card">
+                        <h3>Total Users</h3>
+                        <p style="font-size: 2rem; color: var(--primary-red);">1,254</p>
+                    </div>
+                    <div class="admin-card">
+                        <h3>Active Today</h3>
+                        <p style="font-size: 2rem; color: var(--success);">892</p>
+                    </div>
+                    <div class="admin-card">
+                        <h3>Total Earnings</h3>
+                        <p style="font-size: 2rem; color: var(--warning);">$45,678</p>
+                    </div>
+                    <div class="admin-card">
+                        <h3>Pending Withdrawals</h3>
+                        <p style="font-size: 2rem; color: var(--primary-red);">$12,345</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase Configuration -->
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyC4RYJY5Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q3Q",
+            authDomain: "ysm-platform.firebaseapp.com",
+            projectId: "ysm-platform",
+            storageBucket: "ysm-platform.appspot.com",
+            messagingSenderId: "123456789012",
+            appId: "1:123456789012:web:abcdef1234567890"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+
+        // Global variables
+        let currentUser = null;
+        let userData = null;
+        let selectedPaymentMethod = null;
+
+        // Authentication state observer
+        auth.onAuthStateChanged((user) => {
+            if (user) {
+                currentUser = user;
+                loadUserData();
+                showPage('dashboard-page');
+            } else {
+                currentUser = null;
+                userData = null;
+                showPage('landing-page');
+            }
+        });
+
+        // Page navigation function
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(page => {
+                page.classList.remove('active');
             });
-          });
+            
+            // Show the selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update navigation active states
+            updateNavigation(pageId);
+            
+            // Load page-specific data
+            loadPageData(pageId);
         }
-      }
-    } catch (err) {
-      console.error('Admin load error', err);
-      if (statsEl) statsEl.textContent = 'Failed to load: ' + (err.message||err);
-    }
-  }
 
-  // ===================== Auth state listener =====================
-  auth.onAuthStateChanged(async (u) => {
-    try {
-      if (u) {
-        userId = u.uid;
-        // ensure user doc
-        const ref = db.collection('users').doc(userId);
-        const doc = await ref.get();
-        if (!doc.exists) {
-          await ref.set({ name: u.displayName||'', email: u.email||'', tier:'unassigned', kycStatus:'unverified', role:'user', createdAt:new Date().toISOString() });
+        function updateNavigation(pageId) {
+            // Update bottom navigation
+            document.querySelectorAll('.nav-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            // Set active state based on page
+            if (pageId === 'dashboard-page') {
+                document.querySelectorAll('.nav-item')[0].classList.add('active');
+            } else if (pageId === 'tasks-page') {
+                document.querySelectorAll('.nav-item')[1].classList.add('active');
+            } else if (pageId === 'tier-page') {
+                document.querySelectorAll('.nav-item')[2].classList.add('active');
+            } else if (pageId === 'profile-page') {
+                document.querySelectorAll('.nav-item')[3].classList.add('active');
+            }
         }
-        const fresh = await ref.get();
-        const data = fresh.exists ? fresh.data() : {};
-        currentUser = { id: userId, name: data.name || u.displayName || (u.email||'').split('@')[0], email: data.email || u.email || '', tier: data.tier || 'unassigned', kycStatus: data.kycStatus || 'unverified', role: data.role || 'user', raw: data };
-        // Update UI small bits
-        if (currentUser) {
-          // set dashboard UI
-          const dn = $('dash-name'); if (dn) dn.textContent = currentUser.name;
-          const dk = $('dash-kyc'); if (dk) dk.textContent = 'KYC: ' + (currentUser.kycStatus || 'unverified');
+
+        function loadPageData(pageId) {
+            if (pageId === 'dashboard-page') {
+                updateDashboard();
+            } else if (pageId === 'tasks-page') {
+                loadTasks();
+            } else if (pageId === 'tier-page') {
+                loadTiers();
+            } else if (pageId === 'profile-page') {
+                loadProfile();
+            } else if (pageId === 'withdraw-page') {
+                updateWithdrawPage();
+            }
         }
-        // route user
-        if (currentUser.role === 'admin') {
-          // resolve loader readiness
-          appReadyResolve && appReadyResolve();
-          loadAdminPanel();
-        } else {
-          // normal user
-          appReadyResolve && appReadyResolve();
-          if (currentUser.kycStatus === 'approved') showPage('user-dashboard');
-          else if (currentUser.kycStatus === 'pending') showPage('kyc-pending-page');
-          else showPage('kyc-page');
+
+        // User registration
+        function registerUser() {
+            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const confirmPassword = document.getElementById('reg-confirm-password').value;
+            const phone = document.getElementById('reg-phone').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            showLoading(true);
+
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    const user = userCredential.user;
+                    
+                    // Create user document in Firestore
+                    return db.collection('users').doc(user.uid).set({
+                        name: name,
+                        email: email,
+                        phone: phone,
+                        balance: 0,
+                        tier: 'starter',
+                        kycStatus: 'pending',
+                        tasksCompleted: 0,
+                        joinedAt: new Date(),
+                        lastLogin: new Date()
+                    });
+                })
+                .then(() => {
+                    showLoading(false);
+                    alert('Registration successful! Please verify your email.');
+                    showPage('login-page');
+                })
+                .catch((error) => {
+                    showLoading(false);
+                    alert('Registration failed: ' + error.message);
+                });
         }
-      } else {
-        // not signed in
-        currentUser = null; userId = null;
-        appReadyResolve && appReadyResolve();
-        // default landing. showPage will be called by loader finish
-      }
-    } catch (err) {
-      console.error('Error loading user data:', err);
-      showError('Error loading user data: ' + (err.message || err));
-      appReadyResolve && appReadyResolve();
-    }
-  });
 
-  // Wire file input click helpers (safe guards)
-  document.addEventListener('click', (e) => {
-    if (e.target && e.target.id === 'kyc-front-upload') $('kyc-front')?.click();
-    if (e.target && e.target.id === 'kyc-back-upload') $('kyc-back')?.click();
-    if (e.target && e.target.id === 'kyc-selfie-upload') $('kyc-selfie')?.click();
-  });
+        // User login
+        function loginUser() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
 
-  // Update file labels
-  ['kyc-front','kyc-back','kyc-selfie'].forEach(id => {
-    const el = $(id);
-    if (el) {
-      el.addEventListener('change', () => {
-        const name = el.files[0] ? el.files[0].name : 'No file chosen';
-        $(id + '-name') && ($(id + '-name').textContent = name);
-      });
-    }
-  });
+            showLoading(true);
 
-  // Expose some functions to window for debugging
-  window.showPage = showPage;
-  window.registerUser = registerUser;
-  window.loginUser = loginUser;
-  window.logout = logout;
-  window.submitKYC = submitKYC;
-  window.loadAdminPanel = loadAdminPanel;
+            auth.signInWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    showLoading(false);
+                    // Auth state observer will handle the redirect
+                })
+                .catch((error) => {
+                    showLoading(false);
+                    alert('Login failed: ' + error.message);
+                });
+        }
 
-  // If loader hasn't already been resolved by auth state, resolve after 3s to allow adaptive finish
-  setTimeout(()=>{ appReadyResolve && appReadyResolve(); }, 3000);
+        // Load user data from Firestore
+        function loadUserData() {
+            if (!currentUser) return;
 
-  </script>
+            db.collection('users').doc(currentUser.uid).get()
+                .then((doc) => {
+                    if (doc.exists) {
+                        userData = doc.data();
+                        updateUIWithUserData();
+                    }
+                })
+                .catch((error) => {
+                    console.error('Error loading user data:', error);
+                });
+        }
+
+        function updateUIWithUserData() {
+            if (!userData) return;
+
+            // Update user name in all locations
+            document.querySelectorAll('#user-name, #user-name-tasks, #user-name-tier, #user-name-profile, #user-name-withdraw').forEach(element => {
+                element.textContent = userData.name;
+            });
+
+            // Update wallet balance
+            document.getElementById('wallet-balance').textContent = '$' + userData.balance.toFixed(2);
+            document.getElementById('withdraw-balance').textContent = '$' + userData.balance.toFixed(2);
+
+            // Update tasks completed
+            document.getElementById('tasks-completed').textContent = userData.tasksCompleted;
+
+            // Update current tier
+            document.getElementById('current-tier').textContent = userData.tier;
+
+            // Update KYC status
+            const kycStatusElement = document.getElementById('kyc-status');
+            kycStatusElement.textContent = userData.kycStatus;
+            kycStatusElement.className = 'badge badge-' + userData.kycStatus;
+        }
+
+        function updateDashboard() {
+            // Load tasks for dashboard
+            loadTasksForDashboard();
+        }
+
+        function loadTasksForDashboard() {
+            // In a real app, this would fetch from Firestore
+            const tasksContainer = document.getElementById('tasks-container');
+            tasksContainer.innerHTML = `
+                <div class="task-card">
+                    <h3>Watch YouTube Video</h3>
+                    <p>Watch this video for 30 seconds to earn $0.50</p>
+                    <button class="btn btn-primary" onclick="startTask('task1')">Start Task</button>
+                </div>
+                <div class="task-card">
+                    <h3>Subscribe to Channel</h3>
+                    <p>Subscribe to this YouTube channel to earn $1.00</p>
+                    <button class="btn btn-primary" onclick="startTask('task2')">Start Task</button>
+                </div>
+            `;
+        }
+
+        function loadTasks() {
+            // In a real app, this would fetch from Firestore
+            const tasksList = document.getElementById('tasks-list');
+            tasksList.innerHTML = `
+                <div class="task-card">
+                    <div class="video-container">
+                        <div id="player"></div>
+                        <div class="task-timer" id="task-timer">30s</div>
+                    </div>
+                    <h3>Watch this YouTube Video</h3>
+                    <p>Watch the video for 30 seconds to earn $0.50</p>
+                    <button class="subscribe-btn" id="task-button" onclick="startTaskWatching()">Start Watching</button>
+                </div>
+            `;
+        }
+
+        function loadTiers() {
+            const tierTableBody = document.getElementById('tier-table-body');
+            const tiers = [
+                { name: '$115.38', ads: 8, pay: '$0.48', daily: '$3.85', monthly: '$115.38', sixMonth: '$692.31', oneYear: '$1,384.62' },
+                { name: '$192.31', ads: 10, pay: '$0.64', daily: '$6.41', monthly: '$192.31', sixMonth: '$1,153.85', oneYear: '$2,307.69' },
+                { name: '$269.23', ads: 12, pay: '$0.75', daily: '$8.97', monthly: '$269.23', sixMonth: '$1,615.38', oneYear: '$3,230.77' },
+                { name: '$307.69', ads: 13, pay: '$0.79', daily: '$10.26', monthly: '$307.69', sixMonth: '$1,846.15', oneYear: '$3,692.31' },
+                { name: '$461.54', ads: 15, pay: '$1.03', daily: '$15.38', monthly: '$461.54', sixMonth: '$2,769.23', oneYear: '$5,538.46' },
+                { name: '$615.38', ads: 17, pay: '$1.21', daily: '$20.51', monthly: '$615.38', sixMonth: '$3,692.31', oneYear: '$7,384.62' },
+                { name: '$769.23', ads: 18, pay: '$1.43', daily: '$25.64', monthly: '$769.23', sixMonth: '$4,615.38', oneYear: '$9,230.77' },
+                { name: '$923.08', ads: 20, pay: '$1.54', daily: '$30.77', monthly: '$923.08', sixMonth: '$5,538.46', oneYear: '$11,076.92' },
+                { name: '$1,692.31', ads: 25, pay: '$2.26', daily: '$56.41', monthly: '$1,692.31', sixMonth: '$10,153.85', oneYear: '$20,307.69' },
+                { name: '$2,461.54', ads: 30, pay: '$2.74', daily: '$82.05', monthly: '$2,461.54', sixMonth: '$14,769.23', oneYear: '$29,538.46' },
+                { name: '$3,230.77', ads: 35, pay: '$3.08', daily: '$107.69', monthly: '$3,230.77', sixMonth: '$19,384.62', oneYear: '$38,769.23' },
+                { name: '$4,000.00', ads: 40, pay: '$3.33', daily: '$133.33', monthly: '$4,000.00', sixMonth: '$24,000.00', oneYear: '$48,000.00' },
+                { name: '$4,615.38', ads: 45, pay: '$3.42', daily: '$153.85', monthly: '$4,615.38', sixMonth: '$27,692.31', oneYear: '$55,384.62' }
+            ];
+
+            tierTableBody.innerHTML = '';
+            tiers.forEach(tier => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${tier.name}</td>
+                    <td>${tier.ads}</td>
+                    <td>${tier.pay}</td>
+                    <td>${tier.daily}</td>
+                    <td>${tier.monthly}</td>
+                    <td>${tier.sixMonth}</td>
+                    <td>${tier.oneYear}</td>
+                    <td><button class="btn btn-primary" onclick="upgradeTier('${tier.name}')">Upgrade</button></td>
+                `;
+                tierTableBody.appendChild(row);
+            });
+        }
+
+        function loadProfile() {
+            if (!userData) return;
+
+            document.getElementById('profile-name').textContent = userData.name;
+            document.getElementById('profile-email').textContent = userData.email;
+            document.getElementById('profile-phone').textContent = userData.phone;
+            document.getElementById('profile-joined').textContent = userData.joinedAt ? userData.joinedAt.toDate().toLocaleDateString() : 'N/A';
+            document.getElementById('profile-kyc').textContent = userData.kycStatus;
+            document.getElementById('profile-tier').textContent = userData.tier;
+
+            // Load KYC section
+            const kycSection = document.getElementById('kyc-section');
+            if (userData.kycStatus === 'approved') {
+                kycSection.innerHTML = '<p style="color: var(--success);">Your KYC has been approved!</p>';
+            } else if (userData.kycStatus === 'pending') {
+                kycSection.innerHTML = '<p style="color: var(--warning);">Your KYC is pending approval.</p>';
+            } else {
+                kycSection.innerHTML = `
+                    <p>Complete KYC verification to unlock full platform features</p>
+                    <div class="file-upload" onclick="document.getElementById('id-front').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Upload Front of ID Document</p>
+                        <input type="file" id="id-front" style="display: none;" onchange="handleFileUpload(this, 'id-front-name')">
+                        <div id="id-front-name" class="file-name"></div>
+                    </div>
+                    <div class="file-upload" onclick="document.getElementById('id-back').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Upload Back of ID Document</p>
+                        <input type="file" id="id-back" style="display: none;" onchange="handleFileUpload(this, 'id-back-name')">
+                        <div id="id-back-name" class="file-name"></div>
+                    </div>
+                    <div class="file-upload" onclick="document.getElementById('selfie').click()">
+                        <i class="fas fa-cloud-upload-alt" style="font-size: 2rem; margin-bottom: 10px;"></i>
+                        <p>Upload Selfie with ID</p>
+                        <input type="file" id="selfie" style="display: none;" onchange="handleFileUpload(this, 'selfie-name')">
+                        <div id="selfie-name" class="file-name"></div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 15px;" onclick="submitKYC()">Submit KYC</button>
+                `;
+            }
+        }
+
+        function updateWithdrawPage() {
+            if (!userData) return;
+            document.getElementById('withdraw-balance').textContent = '$' + userData.balance.toFixed(2);
+        }
+
+        function selectPaymentMethod(element, method) {
+            // Remove selected class from all payment methods
+            document.querySelectorAll('.payment-method').forEach(item => {
+                item.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked element
+            element.classList.add('selected');
+            selectedPaymentMethod = method;
+        }
+
+        function processWithdrawal() {
+            const amount = parseFloat(document.getElementById('withdraw-amount').value);
+            const paymentDetails = document.getElementById('payment-details').value;
+            
+            if (!amount || amount <= 0) {
+                alert('Please enter a valid amount');
+                return;
+            }
+            
+            if (!selectedPaymentMethod) {
+                alert('Please select a payment method');
+                return;
+            }
+            
+            if (!paymentDetails) {
+                alert('Please enter payment details');
+                return;
+            }
+            
+            if (amount > userData.balance) {
+                alert('Insufficient balance');
+                return;
+            }
+            
+            // In a real app, this would create a withdrawal request in Firestore
+            showLoading(true);
+            
+            setTimeout(() => {
+                showLoading(false);
+                alert('Withdrawal request submitted successfully! It will be processed within 24 hours.');
+                showPage('dashboard-page');
+            }, 2000);
+        }
+
+        function startTaskWatching() {
+            const taskButton = document.getElementById('task-button');
+            taskButton.disabled = true;
+            taskButton.textContent = 'Watching...';
+            
+            let timeLeft = 30;
+            const timerElement = document.getElementById('task-timer');
+            
+            const timer = setInterval(() => {
+                timeLeft--;
+                timerElement.textContent = timeLeft + 's';
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    taskButton.textContent = 'Task Completed!';
+                    
+                    // Reward user
+                    if (userData) {
+                        userData.balance += 0.50;
+                        userData.tasksCompleted += 1;
+                        
+                        // Update Firestore
+                        db.collection('users').doc(currentUser.uid).update({
+                            balance: userData.balance,
+                            tasksCompleted: userData.tasksCompleted
+                        }).then(() => {
+                            updateUIWithUserData();
+                        });
+                    }
+                }
+            }, 1000);
+        }
+
+        function upgradeTier(tierName) {
+            alert(`Upgrade to ${tierName} tier selected. In a real app, this would process payment.`);
+        }
+
+        function handleFileUpload(input, displayId) {
+            const file = input.files[0];
+            if (file) {
+                document.getElementById(displayId).textContent = file.name;
+            }
+        }
+
+        function submitKYC() {
+            alert('KYC submitted for approval. In a real app, this would upload documents to Firebase Storage.');
+        }
+
+        function moveToNext(input, nextIndex) {
+            if (input.value.length === 1) {
+                const nextInput = input.parentElement.querySelector(`.pin-input:nth-child(${nextIndex + 1})`);
+                if (nextInput) {
+                    nextInput.focus();
+                }
+            }
+        }
+
+        function verifyOTP() {
+            // In a real app, this would verify the OTP with Firebase
+            showPage('dashboard-page');
+        }
+
+        function resendOTP() {
+            alert('OTP resent to your email.');
+        }
+
+        function adminLogin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            
+            // In a real app, this would verify admin credentials
+            if (email === 'admin@ysm.com' && password === 'admin123') {
+                showPage('admin-panel');
+            } else {
+                alert('Invalid admin credentials');
+            }
+        }
+
+        function showAdminSection(section) {
+            // Hide all admin sections
+            document.querySelectorAll('.admin-section').forEach(section => {
+                section.style.display = 'none';
+            });
+            
+            // Show selected section
+            document.getElementById('admin-' + section).style.display = 'block';
+        }
+
+        function logout() {
+            auth.signOut().then(() => {
+                // Auth state observer will handle redirect to landing page
+            });
+        }
+
+        function showLoading(show) {
+            document.getElementById('loading').style.display = show ? 'block' : 'none';
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set up YouTube player
+            if (typeof YT !== 'undefined') {
+                new YT.Player('player', {
+                    height: '300',
+                    width: '100%',
+                    videoId: 'dQw4w9WgXcQ', // Example video ID
+                    playerVars: {
+                        'playsinline': 1
+                    }
+                });
+            }
+        });
+    </script>
 </body>
 </html>
-
